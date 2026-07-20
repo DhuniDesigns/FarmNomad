@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: farmnomad-db
+    environment:
+      POSTGRES_DB: farmnomad_db
+      POSTGRES_USER: farmnomad_user
+      POSTGRES_PASSWORD: farmnomad_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - farmnomad-postgres:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U farmnomad_user -d farmnomad_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  farmnomad-postgres:

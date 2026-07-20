@@ -1,0 +1,20 @@
+[project]
+name = "farmnomad-ai"
+version = "0.1.0"
+description = "FastAPI service for FarmNomad AI-adjacent recommendations and future crop scanner inference."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.139.2",
+  "pydantic-settings==2.10.1",
+  "uvicorn[standard]==0.35.0"
+]
+
+[project.optional-dependencies]
+test = [
+  "httpx==0.28.1",
+  "pytest==8.4.1"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

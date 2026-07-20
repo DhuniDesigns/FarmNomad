@@ -1,0 +1,26 @@
+server:
+  port: ${BACKEND_PORT:9000}
+
+spring:
+  application:
+    name: farmnomad-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/farmnomad_db}
+    username: ${DATABASE_USERNAME:farmnomad_user}
+    password: ${DATABASE_PASSWORD:farmnomad_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+farmnomad:
+  web-origin: ${WEB_ORIGIN:http://localhost:3000}
+  ai-service-base-url: ${AI_SERVICE_BASE_URL:http://localhost:8010}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

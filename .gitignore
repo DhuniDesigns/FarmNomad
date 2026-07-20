@@ -1,0 +1,44 @@
+# Environment files
+.env
+.env.local
+*.env
+!.env.example
+application-local.properties
+
+# Dependencies
+node_modules/
+web/node_modules/
+mobile/node_modules/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Build outputs
+.next/
+dist/
+build/
+target/
+out/
+.turbo/
+.expo/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDEs
+.idea/
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini

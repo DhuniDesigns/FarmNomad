@@ -1,0 +1,29 @@
+{
+  "name": "farmnomad",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FarmNomad monorepo for the UK AgriTech marketplace, surplus redistribution, logistics, web, mobile, backend, and AI services.",
+  "workspaces": [
+    "web",
+    "mobile"
+  ],
+  "scripts": {
+    "dev": "npm --workspace web run dev",
+    "build": "npm --workspace web run build",
+    "lint": "npm --workspace web run lint",
+    "typecheck": "npm --workspace web run typecheck",
+    "test": "npm --workspace web run test",
+    "dev:web": "npm --workspace web run dev",
+    "build:web": "npm --workspace web run build",
+    "lint:web": "npm --workspace web run lint",
+    "test:web": "npm --workspace web run test",
+    "test:e2e": "npm --workspace web run test:e2e",
+    "dev:mobile": "npm --workspace mobile run start",
+    "dev:ai": "cd ai-service && uvicorn app.main:app --reload --port 8010",
+    "test:ai": "cd ai-service && pytest",
+    "test:backend": "cd backend && mvnw test"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
