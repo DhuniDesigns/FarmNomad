@@ -42,14 +42,14 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
             <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-700">{currentUser.role}</p>
           </div>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:mt-5 lg:grid lg:overflow-visible lg:px-3" aria-label="Platform">
+        <nav className="grid grid-cols-2 gap-1 px-3 pb-3 sm:grid-cols-4 lg:mt-5 lg:grid-cols-1 lg:overflow-visible lg:px-3" aria-label="Platform">
           {visibleNav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 className={cn(
-                  "relative flex min-h-11 shrink-0 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:bg-soft hover:text-ink-900",
+                  "relative flex min-h-11 min-w-0 items-center gap-2 overflow-hidden rounded-lg px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:bg-soft hover:text-ink-900 lg:gap-3",
                   active && "text-white hover:text-white"
                 )}
                 href={item.href}
@@ -62,9 +62,9 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
                     transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
                   />
                 ) : null}
-                <span className="relative z-10 flex items-center gap-3">
-                  <Icon aria-hidden="true" size={18} />
-                  {item.label}
+                <span className="relative z-10 flex min-w-0 items-center gap-2 lg:gap-3">
+                  <Icon aria-hidden="true" className="shrink-0" size={18} />
+                  <span className="truncate">{item.label}</span>
                 </span>
               </Link>
             );

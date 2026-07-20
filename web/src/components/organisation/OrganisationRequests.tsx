@@ -20,9 +20,9 @@ export function OrganisationRequests() {
         <div className="mt-4"><StatusPill value={currentUser.organisationStatus ?? "PENDING"} /></div>
       </div>
       <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {surplusListings.map((listing) => (
+        {surplusListings.map((listing, index) => (
           <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-[0_1px_18px_rgba(23,35,27,0.04)]" key={listing.id}>
-            <EditorialImage alt={listing.imageAlt} className="aspect-[4/3]" colour={listing.colour} label={listing.imageLabel} src={listing.imageUrl} />
+            <EditorialImage alt={listing.imageAlt} className="aspect-[4/3]" colour={listing.colour} label={listing.imageLabel} priority={index < 2} src={listing.imageUrl} />
             <div className="grid gap-3 p-4">
               <h2 className="text-xl font-semibold text-ink-900">{listing.title}</h2>
               <p className="text-sm text-ink-700">{listing.quantity} {listing.unit} - {listing.region}</p>

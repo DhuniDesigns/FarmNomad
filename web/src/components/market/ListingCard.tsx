@@ -13,12 +13,15 @@ type ListingCardProps = {
   listing: Listing;
   state: DemoState;
   favourite: boolean;
+  returnHref?: string;
+  priority?: boolean;
   onToggleFavourite: (id: string) => void;
 };
 
-export function ListingCard({ listing, state, favourite, onToggleFavourite }: ListingCardProps) {
+export function ListingCard({ listing, state, favourite, priority = false, returnHref, onToggleFavourite }: ListingCardProps) {
   const vendor = state.vendors.find((candidate) => candidate.id === listing.vendorId);
   const reduceMotion = useReducedMotion();
+  const detailHref = returnHref ? `/market/${listing.id}?from=${encodeURIComponent(returnHref)}` : `/market/${listing.id}`;
 
   return (
     <motion.article
@@ -30,12 +33,13 @@ export function ListingCard({ listing, state, favourite, onToggleFavourite }: Li
       whileHover={reduceMotion ? undefined : { y: -3, boxShadow: "0 18px 42px rgba(23,35,27,0.10)" }}
       whileTap={reduceMotion ? undefined : { scale: 0.995 }}
     >
-      <Link href={`/market/${listing.id}`} aria-label={`View ${listing.title}`}>
+      <Link href={detailHref} aria-label={`View ${listing.title}`}>
         <EditorialImage
           alt={listing.imageAlt}
           className="aspect-[4/3]"
           colour={listing.colour}
           label={listing.imageLabel}
+          priority={priority}
           src={listing.imageUrl}
         />
       </Link>
@@ -46,7 +50,7 @@ export function ListingCard({ listing, state, favourite, onToggleFavourite }: Li
           {listing.organic ? <Badge tone="blue">Organic</Badge> : null}
         </div>
         <div className="min-w-0">
-          <Link href={`/market/${listing.id}`} className="block text-[20px] font-semibold leading-snug text-ink-900 transition-colors duration-150 ease-[var(--ease-farm-out)] group-hover:text-primary-700">
+          <Link href={detailHref} className="block text-[20px] font-semibold leading-snug text-ink-900 transition-colors duration-150 ease-[var(--ease-farm-out)] group-hover:text-primary-700">
             {listing.title}
           </Link>
           <p className="mt-1 flex min-w-0 items-center gap-1 text-sm font-medium text-ink-500">

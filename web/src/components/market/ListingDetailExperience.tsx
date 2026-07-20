@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Heart, MapPin, PackageCheck, ShieldCheck } from "lucide-react";
+import { CalendarDays, Heart, MapPin, PackageCheck, ShieldCheck } from "lucide-react";
+import { BackLink, safeInternalHref } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { EditorialImage } from "@/components/ui/EditorialImage";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -12,15 +13,25 @@ import { ListingCard } from "@/components/market/ListingCard";
 import { getListing, useDemoStore } from "@/lib/demo/store";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
+function returnHrefFromLocation() {
+  if (typeof window === "undefined") return "/market";
+  return safeInternalHref(new URLSearchParams(window.location.search).get("from"), "/market");
+}
+
 export function ListingDetailExperience({ id }: { id: string }) {
   const { state, currentUser, actions } = useDemoStore();
   const listing = getListing(state, id);
   const vendor = listing ? state.vendors.find((candidate) => candidate.id === listing.vendorId) : undefined;
+  const [returnHref, setReturnHref] = useState("/market");
   const [quantity, setQuantity] = useState("1");
   const [note, setNote] = useState("");
   const [name, setName] = useState(currentUser?.name ?? "");
   const [email, setEmail] = useState(currentUser?.email ?? "");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setReturnHref(returnHrefFromLocation());
+  }, []);
 
   if (!listing) {
     return (
@@ -28,7 +39,7 @@ export function ListingDetailExperience({ id }: { id: string }) {
         <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-white p-8 text-center">
           <h1 className="font-editorial text-5xl leading-none text-ink-900">Listing not found</h1>
           <p className="mt-2 text-ink-700">The listing may have been archived or removed from the demo store.</p>
-          <Link className="mt-5 inline-flex rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white" href="/market">Back to market</Link>
+          <BackLink className="mt-5" href={returnHref} label="Back to market" />
         </div>
       </main>
     );
@@ -36,6 +47,8 @@ export function ListingDetailExperience({ id }: { id: string }) {
 
   const favourite = state.favourites.includes(listing.id);
   const isOwnListing = vendor?.userId === currentUser?.id;
+  const listingReturnHref = `/market/${listing.id}?from=${encodeURIComponent(returnHref)}`;
+  const backLabel = returnHref.startsWith("/producers/") ? "Back to producer" : returnHref.includes("?") ? "Back to results" : "Back to market";
   const relatedListings = state.listings
     .filter((candidate) => candidate.id !== listing.id && candidate.status === "ACTIVE" && (candidate.vendorId === listing.vendorId || candidate.category === listing.category))
     .slice(0, 3);
@@ -65,9 +78,7 @@ export function ListingDetailExperience({ id }: { id: string }) {
     <main className="min-h-screen bg-canvas">
       <Toast message={state.toast} onClear={actions.clearToast} />
       <div className="mx-auto max-w-[1360px] px-5 py-8 lg:px-10">
-        <Link className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700" href="/market">
-          <ArrowLeft aria-hidden="true" size={17} /> Back to market
-        </Link>
+        <BackLink href={returnHref} label={backLabel} />
         <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_410px]">
           <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-[0_1px_18px_rgba(23,35,27,0.05)]">
             <EditorialImage
@@ -107,7 +118,7 @@ export function ListingDetailExperience({ id }: { id: string }) {
             </div>
             <div className="rounded-xl bg-soft p-4">
               {vendor ? (
-                <Link className="flex items-center gap-2 text-sm font-semibold text-ink-900 hover:text-primary-700" href={`/producers/${vendor.id}`}>
+                <Link className="flex items-center gap-2 text-sm font-semibold text-ink-900 hover:text-primary-700" href={`/producers/${vendor.id}?from=${encodeURIComponent(listingReturnHref)}`}>
                   <ShieldCheck size={18} /> {vendor.name}
                 </Link>
               ) : (
@@ -152,6 +163,7 @@ export function ListingDetailExperience({ id }: { id: string }) {
                   favourite={state.favourites.includes(candidate.id)}
                   key={candidate.id}
                   listing={candidate}
+                  returnHref={returnHref}
                   onToggleFavourite={actions.toggleFavourite}
                   state={state}
                 />

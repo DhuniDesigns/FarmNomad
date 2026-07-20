@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-GB" className={`${instrumentSerif.variable} ${manrope.variable}`}>
+    <html lang="en-GB" className={`${instrumentSerif.variable} ${manrope.variable}`} data-scroll-behavior="smooth">
       <body>{children}</body>
     </html>
   );

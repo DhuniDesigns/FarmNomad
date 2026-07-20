@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Toast } from "@/components/ui/Toast";
@@ -20,7 +19,7 @@ export function OrderDetail({ id }: { id: string }) {
     return (
       <main className="mx-auto max-w-3xl px-5 py-8">
         <h1 className="font-editorial text-5xl leading-none text-ink-900">Order not found</h1>
-        <Link className="mt-4 inline-flex font-semibold text-primary-700" href="/orders">Back to orders</Link>
+        <BackLink className="mt-4" href="/orders" label="Back to orders" />
       </main>
     );
   }
@@ -28,7 +27,7 @@ export function OrderDetail({ id }: { id: string }) {
   return (
     <main className="mx-auto max-w-5xl px-5 py-8 lg:px-8">
       <Toast message={state.toast} onClear={actions.clearToast} />
-      <Link className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700" href="/orders"><ArrowLeft size={17} /> Back to orders</Link>
+      <BackLink href="/orders" label="Back to orders" />
       <section className="mt-6 rounded-2xl border border-border bg-white p-6 shadow-[0_1px_18px_rgba(23,35,27,0.04)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

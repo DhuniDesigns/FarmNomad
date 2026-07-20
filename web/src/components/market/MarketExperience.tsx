@@ -13,18 +13,59 @@ import type { ListingCategory } from "@/lib/demo/types";
 
 const categories: Array<ListingCategory | "all"> = ["all", "Vegetables", "Fruit", "Dairy", "Bakery", "Prepared food", "Herbs"];
 const regions = ["all", "Lancashire", "Greater Manchester", "Yorkshire"];
+const supplies = ["all", "surplus", "sale", "organic"];
+const sorts = ["newest", "price-asc", "distance", "quantity"];
+const defaultFilters: MarketFilters = {
+  q: "",
+  category: "all",
+  region: "all",
+  supply: "all",
+  sort: "newest"
+};
+
+function queryValue(value: string | null, allowed: string[], fallback: string) {
+  return value && allowed.includes(value) ? value : fallback;
+}
+
+function filtersFromLocation(): MarketFilters {
+  if (typeof window === "undefined") return defaultFilters;
+  const params = new URLSearchParams(window.location.search);
+
+  return {
+    q: params.get("q") ?? "",
+    category: queryValue(params.get("category"), categories, "all"),
+    region: queryValue(params.get("region"), regions, "all"),
+    supply: queryValue(params.get("supply"), supplies, "all"),
+    sort: queryValue(params.get("sort"), sorts, "newest")
+  };
+}
+
+function visibleCountFromLocation() {
+  if (typeof window === "undefined") return 6;
+  const loaded = Number(new URLSearchParams(window.location.search).get("loaded"));
+  return Number.isFinite(loaded) && loaded > 6 ? Math.min(Math.floor(loaded), 48) : 6;
+}
+
+function marketHref(filters: MarketFilters, visibleCount: number) {
+  const params = new URLSearchParams();
+  if (filters.q.trim()) params.set("q", filters.q.trim());
+  if (filters.category !== "all") params.set("category", filters.category);
+  if (filters.region !== "all") params.set("region", filters.region);
+  if (filters.supply !== "all") params.set("supply", filters.supply);
+  if (filters.sort !== "newest") params.set("sort", filters.sort);
+  if (visibleCount > 6) params.set("loaded", String(visibleCount));
+
+  const query = params.toString();
+  return query ? `/market?${query}` : "/market";
+}
 
 export function MarketExperience() {
   const { state, ready, actions } = useDemoStore();
-  const [filters, setFilters] = useState<MarketFilters>({
-    q: "",
-    category: "all",
-    region: "all",
-    supply: "all",
-    sort: "newest"
-  });
+  const [filters, setFilters] = useState<MarketFilters>(filtersFromLocation);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(visibleCountFromLocation);
+  const [urlStateReady, setUrlStateReady] = useState(false);
+  const hasHydratedUrlState = useRef(false);
   const closeFiltersRef = useRef<HTMLButtonElement>(null);
   const reduceMotion = useReducedMotion();
 
@@ -37,10 +78,21 @@ export function MarketExperience() {
     filters.region !== "all" ? { key: "region" as const, label: filters.region } : null,
     filters.supply !== "all" ? { key: "supply" as const, label: filters.supply === "surplus" ? "Surplus only" : filters.supply === "sale" ? "Sale listings" : "Organic" } : null
   ].filter(Boolean) as Array<{ key: keyof MarketFilters; label: string }>;
+  const returnHref = useMemo(() => marketHref(filters, visibleCount), [filters, visibleCount]);
 
   useEffect(() => {
-    setVisibleCount(6);
-  }, [filters]);
+    if (hasHydratedUrlState.current) return;
+    hasHydratedUrlState.current = true;
+    setFilters(filtersFromLocation());
+    setVisibleCount(visibleCountFromLocation());
+    setUrlStateReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!urlStateReady) return;
+    if (typeof window === "undefined") return;
+    window.history.replaceState(null, "", returnHref);
+  }, [returnHref, urlStateReady]);
 
   useEffect(() => {
     if (!mobileFiltersOpen) return;
@@ -55,11 +107,18 @@ export function MarketExperience() {
   }, [mobileFiltersOpen]);
 
   function updateFilter(key: keyof MarketFilters, value: string) {
+    setVisibleCount(6);
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
   function clearFilter(key: keyof MarketFilters) {
+    setVisibleCount(6);
     setFilters((current) => ({ ...current, [key]: key === "q" ? "" : "all" }));
+  }
+
+  function resetFilters() {
+    setVisibleCount(6);
+    setFilters(defaultFilters);
   }
 
   const filterControls = (
@@ -82,7 +141,7 @@ export function MarketExperience() {
         <option value="distance">Nearest first</option>
         <option value="quantity">Largest lots</option>
       </SelectField>
-      <Button type="button" variant="secondary" onClick={() => setFilters({ q: "", category: "all", region: "all", supply: "all", sort: "newest" })}>
+      <Button type="button" variant="secondary" onClick={resetFilters}>
         Reset filters
       </Button>
     </div>
@@ -190,10 +249,12 @@ export function MarketExperience() {
             <>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 <AnimatePresence mode="popLayout">
-                {visibleListings.map((listing) => (
+                {visibleListings.map((listing, index) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
+                    priority={index === 0}
+                    returnHref={returnHref}
                     state={state}
                     favourite={state.favourites.includes(listing.id)}
                     onToggleFavourite={actions.toggleFavourite}
@@ -213,7 +274,7 @@ export function MarketExperience() {
             <div className="rounded-2xl border border-dashed border-border bg-white p-10 text-center">
               <h2 className="font-editorial text-4xl text-ink-900">No listings match these filters</h2>
               <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-ink-700">Widen the region or include both sale and surplus stock to see more supply.</p>
-              <Button className="mt-5" type="button" onClick={() => setFilters({ q: "", category: "all", region: "all", supply: "all", sort: "newest" })}>
+              <Button className="mt-5" type="button" onClick={resetFilters}>
                 Clear filters
               </Button>
             </div>
