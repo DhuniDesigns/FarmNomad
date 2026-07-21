@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Sprout } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 type AuthShellProps = {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export function AuthShell({ children, description, eyebrow, footer, title }: Aut
             sizes="(max-width: 1024px) 100vw, 54vw"
             src="/images/farmnomad-auth-still-life.png"
           />
+          <BrandLogo className="absolute left-5 top-5 z-10 h-12 w-[156px] rounded-xl bg-ink-950/72 px-3 py-2 ring-1 ring-white/15 backdrop-blur-sm sm:left-7 sm:top-7" href="/" label="FarmNomad home" size="sm" variant="light" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950/62 via-ink-950/18 to-transparent p-5 text-white sm:p-7">
             <p className="max-w-sm text-sm font-semibold uppercase tracking-wide text-white/80">Marketplace, surplus, logistics</p>
             <p className="mt-2 max-w-md text-2xl font-semibold leading-tight">One operating layer for food moving from field to handover.</p>
@@ -35,12 +37,7 @@ export function AuthShell({ children, description, eyebrow, footer, title }: Aut
               <ArrowLeft aria-hidden="true" size={17} />
               Market
             </Link>
-            <Link className="flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-ink-900 focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/">
-              <span className="grid size-9 place-items-center rounded-lg bg-primary-50 text-primary-800">
-                <Sprout aria-hidden="true" size={18} />
-              </span>
-              FarmNomad
-            </Link>
+            <BrandLogo href="/" priority size="sm" />
           </div>
 
           <div className="my-auto w-full py-10">

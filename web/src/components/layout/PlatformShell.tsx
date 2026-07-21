@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { BarChart3, ClipboardList, LayoutDashboard, LogIn, Settings, ShieldCheck, Store, Users } from "lucide-react";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { Toast } from "@/components/ui/Toast";
 import { useDemoStore } from "@/lib/demo/store";
@@ -30,10 +31,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
       <Toast message={state.toast} onClear={actions.clearToast} />
       <aside className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex min-h-16 items-center justify-between px-5 lg:block lg:min-h-0 lg:p-5">
-          <Link className="flex items-center gap-3 text-base font-semibold text-ink-900" href="/dashboard">
-            <span className="grid size-9 place-items-center rounded-lg bg-ink-900 text-sm font-semibold text-white">FN</span>
-            FarmNomad
-          </Link>
+          <BrandLogo href="/dashboard" priority size="md" />
           <Link className="text-sm font-semibold text-primary-700 lg:hidden" href="/market">Market</Link>
         </div>
         <div className="hidden px-5 lg:block">
