@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { EditorialImage } from "@/components/ui/EditorialImage";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { useDemoStore } from "@/lib/demo/store";
@@ -27,7 +26,7 @@ export function OrganisationRequests() {
               <h2 className="text-xl font-semibold text-ink-900">{listing.title}</h2>
               <p className="text-sm text-ink-700">{listing.quantity} {listing.unit} - {listing.region}</p>
               <div className="flex gap-2">
-                <Link className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-border px-3 text-sm font-semibold transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-sage hover:bg-soft" href={`/market/${listing.id}`}>View</Link>
+                <ButtonLink className="flex-1" variant="secondary" href={`/market/${listing.id}`}>View</ButtonLink>
                 <Button type="button" onClick={() => actions.createEnquiry({
                   listingId: listing.id,
                   name: currentUser.name,

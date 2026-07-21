@@ -58,12 +58,12 @@ export function DashboardHome() {
             })}
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-[#152219] p-5 text-white shadow-[0_18px_42px_rgba(23,35,27,0.12)]">
+        <div className="rounded-2xl border border-border bg-panel-dark p-5 text-on-dark shadow-[0_18px_42px_rgba(23,35,27,0.12)]">
           <h2 className="text-xl font-semibold">Today's operating note</h2>
-          <p className="mt-3 text-sm leading-6 text-[#dceade]">
+          <p className="mt-3 text-sm leading-6 text-on-dark-muted">
             Keep quantities tight and collection windows explicit. The public market updates from the same demo store, so listing edits are visible immediately.
           </p>
-          <ButtonLink className="mt-5 bg-white text-ink-900 hover:bg-soft" href="/market">Check public market</ButtonLink>
+          <ButtonLink className="mt-5" variant="onDark" href="/market">Check public market</ButtonLink>
         </div>
       </section>
     </main>

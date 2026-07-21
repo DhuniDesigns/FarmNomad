@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ButtonLink } from "@/components/ui/Button";
 
 type EmptyStateProps = {
   title: string;
@@ -13,9 +13,9 @@ export function EmptyState({ title, description, actionHref, actionLabel }: Empt
       <h2 className="text-xl font-semibold text-ink-900">{title}</h2>
       {description ? <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-ink-700">{description}</p> : null}
       {actionHref && actionLabel ? (
-        <Link className="mt-5 inline-flex rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white" href={actionHref}>
+        <ButtonLink className="mt-5" href={actionHref}>
           {actionLabel}
-        </Link>
+        </ButtonLink>
       ) : null}
     </section>
   );

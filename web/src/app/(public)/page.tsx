@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { ButtonLink } from "@/components/ui/Button";
 
 export default function HomePage() {
   return (
@@ -17,15 +17,15 @@ export default function HomePage() {
                 Farmers publish stock, organisations and kitchens request it, and Vendors manage every listing and commitment from one operating layer.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link className="rounded-lg bg-primary-600 px-5 py-3 text-sm font-semibold text-white" href="/market">Browse market</Link>
-                <Link className="rounded-lg border border-border bg-white px-5 py-3 text-sm font-semibold text-ink-900" href="/dashboard">Open dashboard</Link>
+                <ButtonLink href="/market">Browse market</ButtonLink>
+                <ButtonLink variant="secondary" href="/dashboard">Open dashboard</ButtonLink>
               </div>
             </div>
-            <div className="rounded-2xl border border-border bg-[#17231B] p-6 text-white">
-              <p className="text-sm font-semibold text-[#b7d7bc]">Local demo loop</p>
+            <div className="rounded-2xl border border-border bg-panel-dark p-6 text-on-dark">
+              <p className="text-sm font-semibold text-on-dark-subtle">Local demo loop</p>
               <div className="mt-6 grid gap-4">
                 {["Search active listings", "Send order or surplus requests", "Create and edit Vendor listings", "Progress commitment orders"].map((item) => (
-                  <div className="rounded-lg border border-white/15 bg-white/5 p-4 text-lg font-semibold" key={item}>{item}</div>
+                  <div className="rounded-lg border border-white/25 bg-white/10 p-4 text-lg font-semibold" key={item}>{item}</div>
                 ))}
               </div>
             </div>

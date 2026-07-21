@@ -14,18 +14,22 @@ Define as CSS custom properties consumed by Tailwind v4 `@theme`:
 
 | Token | Value | Use |
 |---|---|---|
-| `--color-primary-600` | `#1F7A3D` | Primary actions, brand green |
-| `--color-primary-700` | `#17612F` | Hover/active |
-| `--color-primary-50` | `#EDF7F0` | Tinted backgrounds, selected states |
+| `--color-primary-600` | `#178C4E` | Canonical FarmNomad brand green; primary action surface with dark foreground |
+| `--color-primary-700` | `#157E46` | Hover/active action surface when white foreground is required |
+| `--color-primary-800` | `#126F3E` | Pressed/selected dark green |
+| `--color-primary-50` | `#E8F4ED` | Tinted backgrounds, selected states |
+| `--color-brand-border` | `#B7DDC7` | Brand-tinted component boundaries |
+| `--color-action-foreground` | `#000000` | Foreground for normal text on exact `#178C4E` buttons |
 | `--color-accent-500` | `#E8A13A` | Harvest amber — highlights, badges |
-| `--color-ink-900` | `#16211A` | Headings |
+| `--color-ink-950` | `#07110B` | Strong ink |
+| `--color-ink-900` | `#102018` | Headings |
 | `--color-ink-700` | `#3B4A40` | Body text |
 | `--color-ink-500` | `#66766C` | Secondary text |
 | `--color-surface-0` | `#FFFFFF` | Cards |
 | `--color-surface-50` | `#F6F8F6` | Page background |
 | `--color-border` | `#DDE5DF` | Dividers, input borders |
 | `--color-success-600` | `#1F7A3D` | Success (shares brand green) |
-| `--color-warning-600` | `#B45309` | Warnings |
+| `--color-warning-600` | `#7A3F11` | Warnings on pale amber surfaces |
 | `--color-danger-600` | `#B3261E` | Errors, destructive |
 | `--color-info-600` | `#1D5FA6` | Informational |
 
@@ -64,6 +68,8 @@ Core set to build in `src/components/ui` (see ARCHITECTURE):
 - **Sidebar + TopBar** — role-aware navigation (nav items filtered by role), unread message/notification counts. Replaces the current non-functional Sidebar stub **[Confirmed as pending work]**.
 - **EmptyState** — icon + message + CTA; used across USER-FLOWS empty states.
 - **Pagination**, **SearchBar + FilterPanel**, **ImageUploader** (Cloudinary, per-file retry), **Skeleton** loaders.
+
+Primary buttons use the darker accessible action surface (`--color-primary-700`) with white text. Components using the exact brand green must not use white text at normal label sizes; use `--color-action-foreground` on `--color-primary-600`, or keep `--color-primary-600` for links, icons, focus rings, selected indicators, badges, and charts.
 
 Each component: typed props, no business logic, stories/examples optional but tests for logic-bearing ones.
 

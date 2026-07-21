@@ -39,7 +39,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         <div className="hidden px-5 lg:block">
           <div className="rounded-xl border border-border bg-soft p-4">
             <p className="text-sm font-semibold text-ink-900">{currentUser.name}</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-700">{currentUser.role}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-800">{currentUser.role}</p>
           </div>
         </div>
         <nav className="grid grid-cols-2 gap-1 px-3 pb-3 sm:grid-cols-4 lg:mt-5 lg:grid-cols-1 lg:overflow-visible lg:px-3" aria-label="Platform">
@@ -49,15 +49,18 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
             return (
               <Link
                 className={cn(
-                  "relative flex min-h-11 min-w-0 items-center gap-2 overflow-hidden rounded-lg px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:bg-soft hover:text-ink-900 lg:gap-3",
-                  active && "text-white hover:text-white"
+                  "relative flex min-h-11 min-w-0 items-center gap-2 overflow-hidden rounded-lg px-3 text-sm font-semibold text-ink-700 transition-[background-color,color,box-shadow,transform] duration-150 ease-[var(--ease-farm-out)] hover:bg-primary-50 hover:text-ink-900 focus-visible:ring-3 focus-visible:ring-primary-600/30 lg:gap-3",
+                  active && "bg-primary-700 text-[#ffffff] shadow-[0_10px_24px_rgba(21,126,70,0.18)] hover:bg-primary-700 hover:text-[#ffffff]"
                 )}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 key={item.href}
+                style={active ? { color: "#ffffff" } : undefined}
               >
                 {active ? (
                   <motion.span
-                    className="absolute inset-0 rounded-lg bg-primary-600 shadow-[0_10px_24px_rgba(29,74,52,0.16)]"
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-lg bg-primary-700"
                     layoutId="platform-active-nav"
                     transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
                   />
@@ -89,7 +92,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         </header>
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          initial={false}
           key={pathname}
           transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
         >

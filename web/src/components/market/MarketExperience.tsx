@@ -174,23 +174,23 @@ export function MarketExperience() {
               </Button>
             </form>
           </div>
-          <aside className="self-end rounded-2xl border border-border bg-[#17231B] p-6 text-white shadow-[0_22px_60px_rgba(23,35,27,0.18)]">
-            <p className="text-sm font-semibold text-[#b7d7bc]">Pilot stock board</p>
+          <aside className="self-end rounded-2xl border border-border bg-panel-dark p-6 text-on-dark shadow-[0_22px_60px_rgba(23,35,27,0.18)]">
+            <p className="text-sm font-semibold text-on-dark-subtle">Pilot stock board</p>
             <dl className="mt-5 grid grid-cols-3 gap-3">
               <div>
-                <dt className="text-xs text-[#b7d7bc]">Active lots</dt>
+                <dt className="text-xs text-on-dark-subtle">Active lots</dt>
                 <dd className="text-2xl font-semibold">{state.listings.filter((listing) => listing.status === "ACTIVE").length}</dd>
               </div>
               <div>
-                <dt className="text-xs text-[#b7d7bc]">Surplus qty</dt>
+                <dt className="text-xs text-on-dark-subtle">Surplus qty</dt>
                 <dd className="text-2xl font-semibold">{surplusKg}</dd>
               </div>
               <div>
-                <dt className="text-xs text-[#b7d7bc]">Regions</dt>
+                <dt className="text-xs text-on-dark-subtle">Regions</dt>
                 <dd className="text-2xl font-semibold">3</dd>
               </div>
             </dl>
-            <p className="mt-5 text-sm leading-6 text-[#dceade]">Demo changes persist in this browser. Use Dashboard to create stock and see it appear here.</p>
+            <p className="mt-5 text-sm leading-6 text-on-dark-muted">Demo changes persist in this browser. Use Dashboard to create stock and see it appear here.</p>
           </aside>
         </div>
       </section>
@@ -216,7 +216,7 @@ export function MarketExperience() {
               {activeFilters.map((filter) => (
                 <motion.button
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-sage hover:bg-soft"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-brand-border bg-white px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-visible:ring-3 focus-visible:ring-primary-600/30"
                   exit={{ opacity: 0, scale: 0.96, y: -4 }}
                   initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: -4 }}
                   key={filter.key}

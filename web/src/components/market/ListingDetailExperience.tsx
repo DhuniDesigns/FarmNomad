@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Heart, MapPin, PackageCheck, ShieldCheck } from "lucide-react";
 import { BackLink, safeInternalHref } from "@/components/ui/BackLink";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { EditorialImage } from "@/components/ui/EditorialImage";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { TextAreaField, TextField } from "@/components/ui/Field";
@@ -92,8 +92,8 @@ export function ListingDetailExperience({ id }: { id: string }) {
             <div className="grid gap-6 p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusPill value={listing.status} />
-                {listing.surplus ? <span className="rounded-md bg-[#f3e5d7] px-2.5 py-1 text-xs font-semibold text-warning-600">surplus claim</span> : null}
-                {listing.organic ? <span className="rounded-md bg-[#e8efea] px-2.5 py-1 text-xs font-semibold text-sky-600">organic</span> : null}
+                {listing.surplus ? <span className="rounded-md border border-[#e0b889] bg-[#f3e5d7] px-2.5 py-1 text-xs font-semibold text-warning-600">surplus claim</span> : null}
+                {listing.organic ? <span className="rounded-md border border-[#b8d4ef] bg-info-50 px-2.5 py-1 text-xs font-semibold text-info-600">organic</span> : null}
               </div>
               <div>
                 <h1 className="font-editorial max-w-3xl text-5xl leading-[0.95] text-ink-900 md:text-7xl">{listing.title}</h1>
@@ -129,9 +129,9 @@ export function ListingDetailExperience({ id }: { id: string }) {
             </div>
 
             {isOwnListing ? (
-              <Link className="rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white" href={`/listings/${listing.id}/edit`}>
+              <ButtonLink href={`/listings/${listing.id}/edit`}>
                 Edit your listing
-              </Link>
+              </ButtonLink>
             ) : (
               <div className="grid gap-3">
                 <TextField label="Your name" value={name} onChange={(event) => setName(event.target.value)} />

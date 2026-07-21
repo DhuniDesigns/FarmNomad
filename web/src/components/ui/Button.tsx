@@ -1,17 +1,26 @@
 import Link from "next/link";
 import { forwardRef } from "react";
-import type { ButtonHTMLAttributes, AnchorHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, CSSProperties } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const variants = {
-  primary: "bg-primary-600 text-white shadow-[0_8px_18px_rgba(29,74,52,0.16)] hover:bg-primary-700 active:shadow-[0_4px_12px_rgba(29,74,52,0.14)]",
-  secondary: "border border-border bg-white text-ink-900 hover:border-sage hover:bg-soft active:bg-sand/35",
-  ghost: "text-ink-700 hover:bg-soft active:bg-sand/35",
-  danger: "bg-danger-600 text-white hover:brightness-95 active:brightness-90"
+  primary: "border border-primary-700 bg-primary-700 text-white shadow-[0_8px_18px_rgba(21,126,70,0.16)] hover:border-[#147a44] hover:bg-[#147a44] active:border-primary-800 active:bg-primary-800 active:shadow-[0_4px_12px_rgba(18,111,62,0.18)]",
+  secondary: "border border-brand-border bg-white text-ink-900 hover:border-primary-600 hover:bg-primary-50 active:bg-primary-100",
+  ghost: "border border-transparent text-ink-700 hover:bg-primary-50 hover:text-primary-800 active:bg-primary-100",
+  tertiary: "border border-transparent text-ink-700 hover:bg-primary-50 hover:text-primary-800 active:bg-primary-100",
+  link: "min-h-0 rounded-md border border-transparent bg-transparent px-0 py-0 text-primary-700 shadow-none hover:text-primary-800 hover:underline active:text-primary-800",
+  icon: "border border-brand-border bg-white px-0 text-ink-900 hover:border-primary-600 hover:bg-primary-50 active:bg-primary-100",
+  onDark: "border border-white/45 bg-white text-ink-900 shadow-none hover:border-white hover:bg-primary-50 active:bg-brand-border",
+  onBrand: "border border-black/35 bg-white text-ink-900 shadow-none hover:bg-primary-50 active:bg-brand-border",
+  danger: "border border-danger-600 bg-danger-600 text-white hover:border-danger-700 hover:bg-danger-700 active:border-danger-800 active:bg-danger-800",
+  destructive: "border border-danger-600 bg-danger-600 text-white hover:border-danger-700 hover:bg-danger-700 active:border-danger-800 active:bg-danger-800"
 };
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: keyof typeof variants;
+  loading?: boolean;
+  loadingLabel?: string;
 };
 
 type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
@@ -19,12 +28,32 @@ type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   variant?: keyof typeof variants;
 };
 
-const base = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow,filter,transform] duration-150 ease-[var(--ease-farm-out)] active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-accent-500/25 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100";
+const base = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow,filter,transform] duration-150 ease-[var(--ease-farm-out)] active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-primary-600/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-border disabled:bg-disabled-bg disabled:text-disabled-fg disabled:shadow-none disabled:active:scale-100 aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:border-border aria-disabled:bg-disabled-bg aria-disabled:text-disabled-fg aria-disabled:shadow-none motion-reduce:transition-none motion-reduce:active:scale-100";
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ className, variant = "primary", ...props }, ref) {
-  return <button className={cn(base, variants[variant], className)} ref={ref} {...props} />;
+function foregroundForVariant(variant: keyof typeof variants): CSSProperties["color"] | undefined {
+  if (variant === "primary" || variant === "danger" || variant === "destructive") return "#ffffff";
+  if (variant === "secondary" || variant === "icon" || variant === "onDark" || variant === "onBrand") return "#102018";
+  if (variant === "ghost" || variant === "tertiary" || variant === "link") return "#157E46";
+  return undefined;
+}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ children, className, disabled, loading = false, loadingLabel = "Loading...", style, variant = "primary", ...props }, ref) {
+  const inlineStyle = disabled && !loading ? style : { color: foregroundForVariant(variant), ...style };
+
+  return (
+    <button aria-busy={loading || undefined} className={cn(base, variants[variant], className)} disabled={disabled || loading} ref={ref} style={inlineStyle} {...props}>
+      {loading ? (
+        <>
+          <Loader2 aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
+          <span>{loadingLabel}</span>
+        </>
+      ) : children}
+    </button>
+  );
 });
 
-export function ButtonLink({ className, variant = "primary", href, ...props }: ButtonLinkProps) {
-  return <Link className={cn(base, variants[variant], className)} href={href} {...props} />;
+export function ButtonLink({ className, href, style, variant = "primary", ...props }: ButtonLinkProps) {
+  const inlineStyle = props["aria-disabled"] ? style : { color: foregroundForVariant(variant), ...style };
+
+  return <Link className={cn(base, variants[variant], className)} href={href} style={inlineStyle} {...props} />;
 }

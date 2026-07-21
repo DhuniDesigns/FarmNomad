@@ -35,7 +35,7 @@ export function RegisterForm() {
         <legend className="text-sm font-semibold text-ink-900">Account type</legend>
         <div className="grid gap-2 md:grid-cols-3">
           {roleOptions.map((role) => (
-            <label className="flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-sage hover:bg-soft" key={role}>
+            <label className="flex min-h-11 items-center gap-2 rounded-lg border border-brand-border px-3 text-sm font-semibold transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30" key={role}>
               <input type="radio" value={role} {...register("role")} />
               {role}
             </label>

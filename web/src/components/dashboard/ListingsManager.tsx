@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Edit3, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { useDemoStore } from "@/lib/demo/store";
@@ -22,9 +22,9 @@ export function ListingsManager() {
           <p className="text-sm font-semibold uppercase tracking-wide text-primary-700">Listing management</p>
           <h1 className="font-editorial mt-2 text-5xl leading-none text-ink-900 md:text-6xl">My listings</h1>
         </div>
-        <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white" href="/listings/new">
+        <ButtonLink href="/listings/new">
           <Plus size={18} /> New listing
-        </Link>
+        </ButtonLink>
       </div>
 
       <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-white shadow-[0_1px_18px_rgba(23,35,27,0.04)]">
@@ -42,7 +42,7 @@ export function ListingsManager() {
               <p className="text-sm font-bold text-ink-700">{listing.quantity} {listing.unit}</p>
               <p className="text-sm font-semibold text-ink-900">{listing.pricePence === 0 ? "Donation" : formatCurrency(listing.pricePence)}</p>
               <div className="flex flex-wrap gap-2">
-                <Link className="inline-flex size-10 items-center justify-center rounded-lg border border-border bg-white transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-sage hover:bg-soft" href={`/listings/${listing.id}/edit`} aria-label={`Edit ${listing.title}`}>
+                <Link className="inline-flex size-10 items-center justify-center rounded-lg border border-brand-border bg-white text-ink-900 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-visible:ring-3 focus-visible:ring-primary-600/30" href={`/listings/${listing.id}/edit`} aria-label={`Edit ${listing.title}`}>
                   <Edit3 size={17} />
                 </Link>
                 <Button className="min-h-10 px-3" type="button" variant="secondary" onClick={() => actions.toggleSurplus(listing.id)} aria-label={`Toggle surplus for ${listing.title}`}>
