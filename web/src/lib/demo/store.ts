@@ -97,7 +97,7 @@ export function useDemoStore() {
           ...current,
           users: [...current.users, user],
           sessionUserId: user.id,
-          toast: `Demo account created for ${input.name}`
+          toast: "Account created"
         };
       });
     },

@@ -4,9 +4,9 @@ type BadgeProps = {
 };
 
 const toneClassName = {
-  green: "bg-soft text-primary-700",
-  amber: "bg-[#f3e5d7] text-warning-600",
-  blue: "bg-[#e8efea] text-sky-600"
+  green: "border border-brand-border bg-primary-50 text-primary-800",
+  amber: "border border-[#e0b889] bg-[#f3e5d7] text-warning-600",
+  blue: "border border-[#b8d4ef] bg-info-50 text-info-600"
 };
 
 export function Badge({ children, tone = "green" }: BadgeProps) {

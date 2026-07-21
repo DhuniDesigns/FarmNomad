@@ -1,13 +1,17 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { z } from "zod";
+import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EditorialImage } from "@/components/ui/EditorialImage";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { getListing, useDemoStore } from "@/lib/demo/store";
+import { triggerHaptic } from "@/lib/interactions";
 import type { ListingCategory, ListingInput, ListingStatus } from "@/lib/demo/types";
 
 const listingSchema = z.object({
@@ -61,25 +65,45 @@ export function ListingForm({ id }: { id?: string }) {
   const { state, actions } = useDemoStore();
   const existing = id ? getListing(state, id) : undefined;
   const [form, setForm] = useState<ListingInput>(() => existing ? { ...existing } : defaultInput);
+  const initialFormRef = useRef<ListingInput>(existing ? { ...existing } : defaultInput);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const reduceMotion = useReducedMotion();
 
   const heading = id ? "Edit listing" : "Create listing";
   const submitLabel = id ? "Save listing" : "Publish listing";
   const preview = useMemo(() => form.imageLabel || form.title || "Produce lot", [form.imageLabel, form.title]);
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialFormRef.current), [form]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   function setValue<K extends keyof ListingInput>(key: K, value: ListingInput[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
   function submit() {
+    setSubmitting(true);
     const parsed = listingSchema.safeParse(form);
     if (!parsed.success) {
+      setSubmitting(false);
       setError(parsed.error.issues[0]?.message ?? "Check the listing details.");
+      triggerHaptic("error");
       window.requestAnimationFrame(() => errorRef.current?.focus());
       return;
     }
+    triggerHaptic("success");
     if (id) {
       actions.updateListing(id, parsed.data);
       router.push("/listings");
@@ -89,10 +113,31 @@ export function ListingForm({ id }: { id?: string }) {
     }
   }
 
+  function attemptNavigation(event: MouseEvent<HTMLAnchorElement>, href: string) {
+    if (!isDirty) return;
+    event.preventDefault();
+    setPendingNavigationHref(href);
+  }
+
+  function leaveForm() {
+    const href = pendingNavigationHref ?? "/listings";
+    setPendingNavigationHref(null);
+    router.push(href);
+  }
+
+  function cancelForm() {
+    if (isDirty) {
+      setPendingNavigationHref("/listings");
+      return;
+    }
+    router.push("/listings");
+  }
+
   return (
     <main className="mx-auto max-w-[1280px] px-5 py-8 lg:px-8">
       <div className="mb-7">
-        <p className="text-sm font-semibold uppercase tracking-wide text-primary-700">Vendor listing</p>
+        <BackLink href="/listings" label="Back to listings" fallbackHref="/listings" onNavigateAttempt={attemptNavigation} />
+        <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-primary-700">Vendor listing</p>
         <h1 className="font-editorial mt-2 text-5xl leading-none text-ink-900 md:text-6xl">{heading}</h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-ink-700">
           Describe the lot, set a clear collection window, and publish into the public market.
@@ -145,12 +190,18 @@ export function ListingForm({ id }: { id?: string }) {
             </div>
             <TextField label="Image alt text" value={form.imageAlt} onChange={(event) => setValue("imageAlt", event.target.value)} />
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900">
-                <input type="checkbox" checked={form.surplus} onChange={(event) => setValue("surplus", event.target.checked)} />
+              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900 transition-[background-color,border-color,box-shadow] duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30">
+                <input type="checkbox" checked={form.surplus} onChange={(event) => {
+                  triggerHaptic("selection");
+                  setValue("surplus", event.target.checked);
+                }} />
                 Surplus or donation listing
               </label>
-              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900">
-                <input type="checkbox" checked={form.organic} onChange={(event) => setValue("organic", event.target.checked)} />
+              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900 transition-[background-color,border-color,box-shadow] duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30">
+                <input type="checkbox" checked={form.organic} onChange={(event) => {
+                  triggerHaptic("selection");
+                  setValue("organic", event.target.checked);
+                }} />
                 Organic
               </label>
             </div>
@@ -170,13 +221,16 @@ export function ListingForm({ id }: { id?: string }) {
             </motion.p>
           ) : null}
           <div className="flex flex-wrap gap-3">
-            <Button type="button" onClick={submit}>{submitLabel}</Button>
-            <Button type="button" variant="secondary" onClick={() => router.push("/listings")}>Cancel</Button>
+            <Button type="button" loading={submitting} loadingLabel={id ? "Saving..." : "Publishing..."} onClick={submit}>{submitLabel}</Button>
+            <Button type="button" variant="secondary" onClick={() => {
+              triggerHaptic("selection");
+              cancelForm();
+            }}>Cancel</Button>
           </div>
         </section>
 
         <aside className="sticky top-24 h-fit overflow-hidden rounded-2xl border border-border bg-white shadow-[0_1px_18px_rgba(23,35,27,0.04)]">
-          <EditorialImage alt={form.imageAlt || preview} className="aspect-[4/3]" colour={form.colour} label={preview} src={form.imageUrl} />
+          <EditorialImage alt={form.imageAlt || preview} className="aspect-[4/3]" colour={form.colour} label={preview} priority src={form.imageUrl} />
           <div className="p-4">
             <p className="text-lg font-semibold text-ink-900">{form.title || "Listing preview"}</p>
             <p className="mt-1 text-sm text-ink-700">{form.quantity} {form.unit} - {form.region}</p>
@@ -184,6 +238,15 @@ export function ListingForm({ id }: { id?: string }) {
           </div>
         </aside>
       </div>
+      <ConfirmDialog
+        confirmLabel="Leave form"
+        description="Your listing changes have not been saved. Leave this form and discard the draft?"
+        destructive
+        onCancel={() => setPendingNavigationHref(null)}
+        onConfirm={leaveForm}
+        open={Boolean(pendingNavigationHref)}
+        title="Discard listing changes?"
+      />
     </main>
   );
 }

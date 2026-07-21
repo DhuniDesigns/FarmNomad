@@ -1,25 +1,38 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft, MapPin, ShieldCheck, Timer } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MapPin, ShieldCheck, Timer } from "lucide-react";
 import { ListingCard } from "./ListingCard";
+import { BackLink, safeInternalHref } from "@/components/ui/BackLink";
 import { EditorialImage } from "@/components/ui/EditorialImage";
 import { ButtonLink } from "@/components/ui/Button";
 import { Toast } from "@/components/ui/Toast";
 import { useDemoStore } from "@/lib/demo/store";
 
+function returnHrefFromLocation() {
+  if (typeof window === "undefined") return "/market";
+  return safeInternalHref(new URLSearchParams(window.location.search).get("from"), "/market");
+}
+
 export function ProducerProfileExperience({ id }: { id: string }) {
   const { state, actions } = useDemoStore();
+  const [returnHref, setReturnHref] = useState("/market");
   const vendor = state.vendors.find((candidate) => candidate.id === id);
   const listings = state.listings.filter((listing) => listing.vendorId === id && listing.status === "ACTIVE");
   const heroListing = listings[0] ?? state.listings.find((listing) => listing.vendorId === id);
+  const producerHref = `/producers/${id}?from=${encodeURIComponent(returnHref)}`;
+  const backLabel = returnHref.startsWith("/market/") ? "Back to listing" : returnHref.includes("?") ? "Back to results" : "Back to market";
+
+  useEffect(() => {
+    setReturnHref(returnHrefFromLocation());
+  }, []);
 
   if (!vendor) {
     return (
       <main className="min-h-screen bg-canvas px-5 py-10">
         <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-white p-8 text-center">
           <h1 className="font-editorial text-5xl text-ink-900">Producer not found</h1>
-          <Link className="mt-5 inline-flex font-semibold text-primary-700" href="/market">Back to market</Link>
+          <BackLink className="mt-5" href={returnHref} label="Back to market" />
         </div>
       </main>
     );
@@ -29,9 +42,7 @@ export function ProducerProfileExperience({ id }: { id: string }) {
     <main className="min-h-screen bg-canvas">
       <Toast message={state.toast} onClear={actions.clearToast} />
       <section className="mx-auto max-w-[1360px] px-5 py-8 lg:px-10">
-        <Link className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700" href="/market">
-          <ArrowLeft aria-hidden="true" size={17} /> Back to market
-        </Link>
+        <BackLink href={returnHref} label={backLabel} />
         <div className="mt-6 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
           <EditorialImage
             alt={heroListing?.imageAlt ?? `${vendor.name} produce and growing environment`}
@@ -73,6 +84,7 @@ export function ProducerProfileExperience({ id }: { id: string }) {
               key={listing.id}
               listing={listing}
               onToggleFavourite={actions.toggleFavourite}
+              returnHref={producerHref}
               state={state}
             />
           ))}

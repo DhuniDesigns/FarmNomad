@@ -7,7 +7,7 @@ export const demoSeed: DemoState = {
     {
       id: "user-farmer",
       name: "Mara Holt",
-      email: "farmer@farmnomad.test",
+      email: "mara@northfieldfarm.co.uk",
       role: "FARMER",
       location: "Lancashire",
       phone: "01632 960014"
@@ -15,7 +15,7 @@ export const demoSeed: DemoState = {
     {
       id: "user-kitchen",
       name: "Ellis Street Kitchen",
-      email: "kitchen@farmnomad.test",
+      email: "hello@ellisstreetkitchen.co.uk",
       role: "KITCHEN",
       location: "Manchester",
       phone: "01632 960027"
@@ -23,7 +23,7 @@ export const demoSeed: DemoState = {
     {
       id: "user-org",
       name: "Bolton Community Pantry",
-      email: "organisation@farmnomad.test",
+      email: "team@boltonpantry.org.uk",
       role: "ORGANISATION",
       organisationStatus: "VERIFIED",
       location: "Bolton",
@@ -32,7 +32,7 @@ export const demoSeed: DemoState = {
     {
       id: "user-admin",
       name: "FarmNomad Ops",
-      email: "admin@farmnomad.test",
+      email: "ops@farmnomad.co.uk",
       role: "ADMIN",
       location: "Remote ops",
       phone: "01632 960099"

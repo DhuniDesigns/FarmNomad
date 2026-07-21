@@ -82,3 +82,12 @@ Backend serves on port **9000**. Do not change ports; local tooling (Postman env
 5. **Respect dissertation framing.** Simplifications (synchronous inference, synthetic data, Spring Events) are deliberate, documented decisions with planned scaling paths. Do not "upgrade" them.
 6. **Small diffs.** Prefer several reviewable commits over one large one. Each commit should build and pass tests.
 7. **Update docs with code.** If your change alters an endpoint, table, flow, or decision, update the corresponding file in `docs/` in the same branch.
+
+## Farm Nomad UI quality rules
+
+- Preserve a contextual Back route on nested public and platform pages; prefer internal hrefs with useful state over browser-history-only behaviour.
+- Keep market search/filter/sort state in the URL when practical so result pages can be shared, refreshed, and restored from listing detail pages.
+- Protect dirty forms with an accessible confirmation dialog before navigation; do not silently discard listing drafts.
+- Use semantic controls, labelled inputs, visible focus states, and icon-only `aria-label`s; destructive actions need confirmation.
+- Keep motion purposeful, transform/opacity based, and respectful of `prefers-reduced-motion`.
+- Verify responsive layouts at 320px, 360px, 390px, 430px, 768px, 1024px, 1280px, and 1440px widths before shipping UI polish.
