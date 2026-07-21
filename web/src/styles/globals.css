@@ -99,6 +99,144 @@ h2 {
   font-weight: 400;
 }
 
+.fn-hero-media {
+  animation: fn-hero-drift 18s var(--ease-farm-out) infinite alternate;
+  transform-origin: 58% 50%;
+}
+
+.fn-reveal {
+  animation: fn-reveal-up 720ms var(--ease-farm-out) both;
+}
+
+.fn-delay-1 {
+  animation-delay: 80ms;
+}
+
+.fn-delay-2 {
+  animation-delay: 170ms;
+}
+
+.fn-delay-3 {
+  animation-delay: 270ms;
+}
+
+.fn-delay-4 {
+  animation-delay: 380ms;
+}
+
+.fn-scroll-cue svg {
+  animation: fn-scroll-nudge 1.8s var(--ease-farm-out) infinite;
+}
+
+.fn-lift-card {
+  transform: translateY(0) scale(1);
+  transition:
+    border-color var(--duration-medium) var(--ease-farm-out),
+    box-shadow var(--duration-medium) var(--ease-farm-out),
+    transform var(--duration-medium) var(--ease-farm-out),
+    background-color var(--duration-medium) var(--ease-farm-out);
+}
+
+.fn-lift-card:hover,
+.fn-lift-card:focus-within {
+  transform: translateY(-6px) scale(1.01);
+}
+
+.fn-produce-image {
+  transform: scale(1.01);
+  transition: transform 900ms var(--ease-farm-out);
+}
+
+.fn-produce-panel:hover .fn-produce-image {
+  transform: scale(1.06);
+}
+
+.fn-market-row {
+  transition:
+    border-color var(--duration-medium) var(--ease-farm-out),
+    box-shadow var(--duration-medium) var(--ease-farm-out),
+    transform var(--duration-medium) var(--ease-farm-out);
+}
+
+.fn-market-row:hover,
+.fn-market-row:focus-within {
+  border-color: var(--color-brand-border);
+  box-shadow: 0 14px 34px rgb(16 32 24 / 8%);
+  transform: translateX(6px);
+}
+
+.fn-footer-word {
+  text-shadow: 0 20px 80px rgb(201 248 154 / 18%);
+  animation: fn-footer-glow 7s var(--ease-farm-out) infinite alternate;
+}
+
+.fn-footer-link {
+  position: relative;
+  display: inline-flex;
+}
+
+.fn-footer-link::after {
+  position: absolute;
+  right: 0;
+  bottom: -3px;
+  left: 0;
+  height: 1px;
+  content: "";
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--duration-medium) var(--ease-farm-out);
+}
+
+.fn-footer-link:hover::after,
+.fn-footer-link:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+@keyframes fn-hero-drift {
+  from {
+    transform: scale(1.02) translate3d(-0.4%, -0.2%, 0);
+  }
+
+  to {
+    transform: scale(1.08) translate3d(1.2%, 0.8%, 0);
+  }
+}
+
+@keyframes fn-reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fn-scroll-nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  45% {
+    transform: translateY(5px);
+  }
+}
+
+@keyframes fn-footer-glow {
+  from {
+    filter: saturate(0.92);
+  }
+
+  to {
+    filter: saturate(1.12) brightness(1.05);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -107,5 +245,13 @@ h2 {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .fn-lift-card:hover,
+  .fn-lift-card:focus-within,
+  .fn-market-row:hover,
+  .fn-market-row:focus-within,
+  .fn-produce-panel:hover .fn-produce-image {
+    transform: none;
   }
 }

@@ -8,6 +8,7 @@ const variants = {
   primary: "border border-primary-700 bg-primary-700 text-white shadow-[0_8px_18px_rgba(21,126,70,0.16)] hover:border-[#147a44] hover:bg-[#147a44] active:border-primary-800 active:bg-primary-800 active:shadow-[0_4px_12px_rgba(18,111,62,0.18)]",
   secondary: "border border-brand-border bg-white text-ink-900 hover:border-primary-600 hover:bg-primary-50 active:bg-primary-100",
   ghost: "border border-transparent text-ink-700 hover:bg-primary-50 hover:text-primary-800 active:bg-primary-100",
+  darkGhost: "border border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/18 hover:text-white active:bg-white/24",
   tertiary: "border border-transparent text-ink-700 hover:bg-primary-50 hover:text-primary-800 active:bg-primary-100",
   link: "min-h-0 rounded-md border border-transparent bg-transparent px-0 py-0 text-primary-700 shadow-none hover:text-primary-800 hover:underline active:text-primary-800",
   icon: "border border-brand-border bg-white px-0 text-ink-900 hover:border-primary-600 hover:bg-primary-50 active:bg-primary-100",
@@ -34,6 +35,7 @@ function foregroundForVariant(variant: keyof typeof variants): CSSProperties["co
   if (variant === "primary" || variant === "danger" || variant === "destructive") return "#ffffff";
   if (variant === "secondary" || variant === "icon" || variant === "onDark" || variant === "onBrand") return "#102018";
   if (variant === "ghost" || variant === "tertiary" || variant === "link") return "#157E46";
+  if (variant === "darkGhost") return "#ffffff";
   return undefined;
 }
 
