@@ -9,6 +9,7 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { Toast } from "@/components/ui/Toast";
 import { filterListings, type MarketFilters } from "@/lib/demo/filter";
 import { useDemoStore } from "@/lib/demo/store";
+import { triggerHaptic } from "@/lib/interactions";
 import type { ListingCategory } from "@/lib/demo/types";
 
 const categories: Array<ListingCategory | "all"> = ["all", "Vegetables", "Fruit", "Dairy", "Bakery", "Prepared food", "Herbs"];
@@ -67,6 +68,7 @@ export function MarketExperience() {
   const [urlStateReady, setUrlStateReady] = useState(false);
   const hasHydratedUrlState = useRef(false);
   const closeFiltersRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotion();
 
   const listings = useMemo(() => filterListings(state.listings, filters), [filters, state.listings]);
@@ -106,19 +108,43 @@ export function MarketExperience() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mobileFiltersOpen]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target;
+      const isTyping = target instanceof HTMLElement && ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName);
+
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || isTyping) return;
+
+      event.preventDefault();
+      searchRef.current?.focus();
+      triggerHaptic("selection");
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   function updateFilter(key: keyof MarketFilters, value: string) {
     setVisibleCount(6);
+    if (key !== "q") triggerHaptic("selection");
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
   function clearFilter(key: keyof MarketFilters) {
     setVisibleCount(6);
+    triggerHaptic("selection");
     setFilters((current) => ({ ...current, [key]: key === "q" ? "" : "all" }));
   }
 
   function resetFilters() {
     setVisibleCount(6);
+    triggerHaptic("selection");
     setFilters(defaultFilters);
+  }
+
+  function closeMobileFilters() {
+    triggerHaptic("selection");
+    setMobileFiltersOpen(false);
   }
 
   const filterControls = (
@@ -160,8 +186,13 @@ export function MarketExperience() {
             <p className="mt-5 max-w-2xl text-lg leading-8 text-ink-700">
               Search local supply, compare collection windows, and send a commitment request without payment processing.
             </p>
-            <form className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-[1fr_auto]" onSubmit={(event) => event.preventDefault()}>
+            <form className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-[1fr_auto]" onSubmit={(event) => {
+              event.preventDefault();
+              triggerHaptic("selection");
+              searchRef.current?.blur();
+            }}>
               <TextField
+                ref={searchRef}
                 aria-label="Search listings"
                 className="w-full"
                 label="Search"
@@ -175,7 +206,7 @@ export function MarketExperience() {
             </form>
           </div>
           <aside className="self-end rounded-2xl border border-border bg-panel-dark p-6 text-on-dark shadow-[0_22px_60px_rgba(23,35,27,0.18)]">
-            <p className="text-sm font-semibold text-on-dark-subtle">Pilot stock board</p>
+            <p className="text-sm font-semibold text-on-dark-subtle">Live stock board</p>
             <dl className="mt-5 grid grid-cols-3 gap-3">
               <div>
                 <dt className="text-xs text-on-dark-subtle">Active lots</dt>
@@ -190,7 +221,7 @@ export function MarketExperience() {
                 <dd className="text-2xl font-semibold">3</dd>
               </div>
             </dl>
-            <p className="mt-5 text-sm leading-6 text-on-dark-muted">Demo changes persist in this browser. Use Dashboard to create stock and see it appear here.</p>
+            <p className="mt-5 text-sm leading-6 text-on-dark-muted">Use Dashboard to create stock and see it appear on the public market immediately.</p>
           </aside>
         </div>
       </section>
@@ -206,13 +237,17 @@ export function MarketExperience() {
         <div>
           <div className="mb-4 flex items-center justify-between gap-3">
             <p className="text-sm font-medium text-ink-700">{ready ? `${listings.length} listings match your board` : "Loading listings…"}</p>
-            <Button className="lg:hidden" type="button" variant="secondary" onClick={() => setMobileFiltersOpen(true)}>
+            <Button className="lg:hidden" type="button" variant="secondary" onClick={() => {
+              triggerHaptic("selection");
+              setMobileFiltersOpen(true);
+            }}>
               <SlidersHorizontal aria-hidden="true" size={18} /> Filters
             </Button>
           </div>
 
           {activeFilters.length > 0 ? (
             <div className="mb-5 flex flex-wrap gap-2" aria-label="Active filters">
+              <AnimatePresence initial={false}>
               {activeFilters.map((filter) => (
                 <motion.button
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -229,6 +264,7 @@ export function MarketExperience() {
                   <X aria-hidden="true" size={14} />
                 </motion.button>
               ))}
+              </AnimatePresence>
             </div>
           ) : null}
 
@@ -257,14 +293,20 @@ export function MarketExperience() {
                     returnHref={returnHref}
                     state={state}
                     favourite={state.favourites.includes(listing.id)}
-                    onToggleFavourite={actions.toggleFavourite}
+                    onToggleFavourite={(listingId) => {
+                      triggerHaptic(state.favourites.includes(listingId) ? "selection" : "success");
+                      actions.toggleFavourite(listingId);
+                    }}
                   />
                 ))}
                 </AnimatePresence>
               </div>
               {visibleCount < listings.length ? (
                 <div className="mt-8 flex justify-center">
-                  <Button type="button" variant="secondary" onClick={() => setVisibleCount((count) => count + 6)}>
+                  <Button type="button" variant="secondary" onClick={() => {
+                    triggerHaptic("selection");
+                    setVisibleCount((count) => count + 6);
+                  }}>
                     Load more listings
                   </Button>
                 </div>
@@ -290,7 +332,7 @@ export function MarketExperience() {
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setMobileFiltersOpen(false);
+            if (event.target === event.currentTarget) closeMobileFilters();
           }}
           role="dialog"
           aria-modal="true"
@@ -306,7 +348,7 @@ export function MarketExperience() {
           >
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-ink-900">Filters</h2>
-              <Button ref={closeFiltersRef} className="size-10 px-0" type="button" variant="ghost" onClick={() => setMobileFiltersOpen(false)} aria-label="Close filters">
+              <Button ref={closeFiltersRef} className="size-10 px-0" type="button" variant="ghost" onClick={closeMobileFilters} aria-label="Close filters">
                 <X aria-hidden="true" size={18} />
               </Button>
             </div>

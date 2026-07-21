@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EditorialImage } from "@/components/ui/EditorialImage";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { getListing, useDemoStore } from "@/lib/demo/store";
+import { triggerHaptic } from "@/lib/interactions";
 import type { ListingCategory, ListingInput, ListingStatus } from "@/lib/demo/types";
 
 const listingSchema = z.object({
@@ -66,6 +67,7 @@ export function ListingForm({ id }: { id?: string }) {
   const [form, setForm] = useState<ListingInput>(() => existing ? { ...existing } : defaultInput);
   const initialFormRef = useRef<ListingInput>(existing ? { ...existing } : defaultInput);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const reduceMotion = useReducedMotion();
@@ -92,12 +94,16 @@ export function ListingForm({ id }: { id?: string }) {
   }
 
   function submit() {
+    setSubmitting(true);
     const parsed = listingSchema.safeParse(form);
     if (!parsed.success) {
+      setSubmitting(false);
       setError(parsed.error.issues[0]?.message ?? "Check the listing details.");
+      triggerHaptic("error");
       window.requestAnimationFrame(() => errorRef.current?.focus());
       return;
     }
+    triggerHaptic("success");
     if (id) {
       actions.updateListing(id, parsed.data);
       router.push("/listings");
@@ -184,12 +190,18 @@ export function ListingForm({ id }: { id?: string }) {
             </div>
             <TextField label="Image alt text" value={form.imageAlt} onChange={(event) => setValue("imageAlt", event.target.value)} />
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900">
-                <input type="checkbox" checked={form.surplus} onChange={(event) => setValue("surplus", event.target.checked)} />
+              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900 transition-[background-color,border-color,box-shadow] duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30">
+                <input type="checkbox" checked={form.surplus} onChange={(event) => {
+                  triggerHaptic("selection");
+                  setValue("surplus", event.target.checked);
+                }} />
                 Surplus or donation listing
               </label>
-              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900">
-                <input type="checkbox" checked={form.organic} onChange={(event) => setValue("organic", event.target.checked)} />
+              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900 transition-[background-color,border-color,box-shadow] duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30">
+                <input type="checkbox" checked={form.organic} onChange={(event) => {
+                  triggerHaptic("selection");
+                  setValue("organic", event.target.checked);
+                }} />
                 Organic
               </label>
             </div>
@@ -209,8 +221,11 @@ export function ListingForm({ id }: { id?: string }) {
             </motion.p>
           ) : null}
           <div className="flex flex-wrap gap-3">
-            <Button type="button" onClick={submit}>{submitLabel}</Button>
-            <Button type="button" variant="secondary" onClick={cancelForm}>Cancel</Button>
+            <Button type="button" loading={submitting} loadingLabel={id ? "Saving..." : "Publishing..."} onClick={submit}>{submitLabel}</Button>
+            <Button type="button" variant="secondary" onClick={() => {
+              triggerHaptic("selection");
+              cancelForm();
+            }}>Cancel</Button>
           </div>
         </section>
 

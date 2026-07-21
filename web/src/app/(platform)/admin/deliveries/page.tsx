@@ -6,7 +6,7 @@ export default function AdminDeliveriesPage() {
       <EmptyState
         actionHref="/orders"
         actionLabel="Review order handovers"
-        description="For the V1 web demo, collection windows and handover status live on commitment orders so the supply loop remains inspectable."
+        description="Collection windows and handover status live on commitment orders so the supply loop remains inspectable."
         title="Delivery coordination is tracked through orders"
       />
     </main>

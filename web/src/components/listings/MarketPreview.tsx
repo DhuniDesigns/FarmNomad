@@ -6,7 +6,7 @@ export function MarketPreview() {
       <div className="flex size-11 items-center justify-center rounded-lg bg-primary-600 text-ink-950">
         <Sprout aria-hidden="true" size={22} />
       </div>
-      <h2 className="mt-5 text-xl font-semibold text-ink-900">Today's pilot loop</h2>
+      <h2 className="mt-5 text-xl font-semibold text-ink-900">Today's supply loop</h2>
       <dl className="mt-5 grid gap-4 text-sm">
         <div>
           <dt className="font-semibold text-ink-900">Listings</dt>

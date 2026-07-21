@@ -15,7 +15,7 @@ export function OrganisationRequests() {
       <div className="rounded-2xl border border-border bg-white p-6 shadow-[0_1px_18px_rgba(23,35,27,0.04)]">
         <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary-700"><ShieldCheck size={18} /> Organisation access</p>
         <h1 className="font-editorial mt-2 text-5xl leading-none text-ink-900 md:text-6xl">Surplus requests</h1>
-        <p className="mt-3 max-w-2xl text-base leading-7 text-ink-700">Verified organisations can claim surplus stock. This demo records each claim as a vendor order request.</p>
+        <p className="mt-3 max-w-2xl text-base leading-7 text-ink-700">Verified organisations can claim surplus stock. FarmNomad records each claim as a vendor order request.</p>
         <div className="mt-4"><StatusPill value={currentUser.organisationStatus ?? "PENDING"} /></div>
       </div>
       <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -32,7 +32,7 @@ export function OrganisationRequests() {
                   name: currentUser.name,
                   email: currentUser.email,
                   quantity: Math.min(5, listing.quantity),
-                  note: "Organisation surplus claim from demo requests page."
+                  note: "Organisation surplus claim from the requests page."
                 })}>
                   Claim
                 </Button>

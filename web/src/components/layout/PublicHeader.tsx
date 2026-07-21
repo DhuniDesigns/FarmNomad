@@ -11,10 +11,10 @@ export function PublicHeader() {
         </Link>
         <nav className="hidden items-center gap-7 text-[14px] font-medium text-ink-700 md:flex" aria-label="Public">
           <Link href="/market">Market</Link>
-          <Link href="/login">Demo login</Link>
+          <Link href="/login">Sign in</Link>
           <Link href="/dashboard">Dashboard</Link>
         </nav>
-        <ButtonLink href="/register" className="hidden md:inline-flex">Join pilot</ButtonLink>
+        <ButtonLink href="/register" className="hidden md:inline-flex">Create account</ButtonLink>
       </div>
     </header>
   );

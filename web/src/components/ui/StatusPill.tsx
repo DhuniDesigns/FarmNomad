@@ -17,7 +17,7 @@ const styles: Record<string, string> = {
 
 export function StatusPill({ value, className }: { value: string; className?: string }) {
   return (
-    <span className={cn("inline-flex rounded-md px-2.5 py-1 text-xs font-semibold", styles[value] ?? styles.DRAFT, className)}>
+    <span className={cn("inline-flex min-h-7 w-fit items-center justify-center self-start justify-self-start whitespace-nowrap rounded-full px-3.5 py-1.5 text-[11px] font-bold leading-none tracking-[0.02em] md:self-center", styles[value] ?? styles.DRAFT, className)}>
       {value.replace("_", " ").toLowerCase()}
     </span>
   );

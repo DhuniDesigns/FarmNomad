@@ -75,19 +75,19 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="hidden px-5 py-4 lg:block">
           <Button className="w-full" type="button" variant="secondary" onClick={() => actions.loginAs(currentUser.role === "ADMIN" ? "FARMER" : "ADMIN")}>
-            <LogIn aria-hidden="true" size={17} /> Switch demo role
+            <LogIn aria-hidden="true" size={17} /> Switch workspace role
           </Button>
         </div>
       </aside>
       <div>
         <header className="hidden border-b border-border bg-white/85 px-6 py-4 backdrop-blur lg:flex lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary-700">Local V1 demo</p>
-            <p className="mt-1 text-sm font-semibold text-ink-700">All changes persist in browser storage.</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary-700">Operations workspace</p>
+            <p className="mt-1 text-sm font-semibold text-ink-700">Listings, orders, and requests update across the platform.</p>
           </div>
           <div className="flex items-center gap-3">
             <Link className="text-sm font-semibold text-ink-700 hover:text-primary-700" href="/market">View market</Link>
-            <Button type="button" variant="secondary" onClick={actions.resetDemo}>Reset demo data</Button>
+            <Button type="button" variant="secondary" onClick={actions.resetDemo}>Reset workspace</Button>
           </div>
         </header>
         <motion.div

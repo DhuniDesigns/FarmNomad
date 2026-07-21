@@ -38,7 +38,7 @@ export function ListingDetailExperience({ id }: { id: string }) {
       <main className="min-h-screen bg-canvas px-5 py-10">
         <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-white p-8 text-center">
           <h1 className="font-editorial text-5xl leading-none text-ink-900">Listing not found</h1>
-          <p className="mt-2 text-ink-700">The listing may have been archived or removed from the demo store.</p>
+          <p className="mt-2 text-ink-700">The listing may have been archived or removed from the workspace.</p>
           <BackLink className="mt-5" href={returnHref} label="Back to market" />
         </div>
       </main>

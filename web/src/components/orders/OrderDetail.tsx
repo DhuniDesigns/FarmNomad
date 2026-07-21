@@ -1,10 +1,12 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Toast } from "@/components/ui/Toast";
 import { useDemoStore } from "@/lib/demo/store";
+import { triggerHaptic } from "@/lib/interactions";
 import type { OrderStatus } from "@/lib/demo/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -14,6 +16,7 @@ export function OrderDetail({ id }: { id: string }) {
   const { state, actions } = useDemoStore();
   const order = state.orders.find((candidate) => candidate.id === id);
   const listing = order ? state.listings.find((candidate) => candidate.id === order.listingId) : undefined;
+  const reduceMotion = useReducedMotion();
 
   if (!order || !listing) {
     return (
@@ -43,13 +46,28 @@ export function OrderDetail({ id }: { id: string }) {
           <Metric label="Collection" value={listing.collectionWindow} />
         </div>
         <p className="mt-5 rounded-xl bg-soft p-4 text-sm font-semibold text-ink-700">{order.note}</p>
-        <div className="mt-6 flex flex-wrap gap-2">
+        <motion.div className="mt-6 flex flex-wrap gap-2" layout>
           {statuses.map((status) => (
-            <Button key={status} type="button" variant={status === order.status ? "primary" : status === "CANCELLED" ? "danger" : "secondary"} onClick={() => actions.updateOrderStatus(order.id, status)}>
+            <motion.div
+              key={status}
+              layout
+              transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={reduceMotion ? undefined : { y: -2 }}
+            >
+              <Button
+                aria-pressed={status === order.status}
+                type="button"
+                variant={status === order.status ? "primary" : status === "CANCELLED" ? "danger" : "secondary"}
+                onClick={() => {
+                  triggerHaptic(status === "CANCELLED" ? "warning" : "success");
+                  actions.updateOrderStatus(order.id, status);
+                }}
+              >
               Mark {status.toLowerCase()}
-            </Button>
+              </Button>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
     </main>
   );
