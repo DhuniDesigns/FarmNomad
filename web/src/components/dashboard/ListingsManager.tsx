@@ -53,7 +53,7 @@ export function ListingsManager() {
               <p className="text-sm font-bold text-ink-700">{listing.quantity} {listing.unit}</p>
               <p className="text-sm font-semibold text-ink-900">{listing.pricePence === 0 ? "Donation" : formatCurrency(listing.pricePence)}</p>
               <div className="flex flex-wrap gap-2">
-                <Link className="inline-flex size-10 items-center justify-center rounded-lg border border-brand-border bg-white text-ink-900 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-visible:ring-3 focus-visible:ring-primary-600/30" href={`/listings/${listing.id}/edit`} aria-label={`Edit ${listing.title}`} onClick={() => triggerHaptic("selection")}>
+                <Link className="inline-flex size-10 items-center justify-center rounded-lg border border-brand-border bg-white text-ink-900 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-700 hover:bg-primary-700 hover:text-white active:border-primary-800 active:bg-primary-800 active:text-white focus-visible:ring-3 focus-visible:ring-primary-600/30" href={`/listings/${listing.id}/edit`} aria-label={`Edit ${listing.title}`} onClick={() => triggerHaptic("selection")}>
                   <Edit3 size={17} />
                 </Link>
                 <Button className="min-h-10 px-3" type="button" variant="secondary" onClick={() => {

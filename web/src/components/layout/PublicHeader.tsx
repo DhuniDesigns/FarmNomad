@@ -13,25 +13,38 @@ export function PublicHeader({ variant = "default" }: PublicHeaderProps) {
   return (
     <header
       className={cn(
-        "z-40 border-b backdrop-blur",
-        isOverlay ? "absolute inset-x-0 top-0 border-white/18 bg-black/12 text-white" : "sticky top-0 border-border bg-canvas/95"
+        "z-40 border-b",
+        isOverlay ? "absolute inset-x-0 top-0 border-white/18 bg-transparent text-white" : "sticky top-0 border-border bg-canvas/95 backdrop-blur"
       )}
     >
-      <div className="mx-auto flex min-h-[72px] max-w-[1360px] items-center justify-between gap-4 px-5 lg:px-10">
+      <div className="mx-auto flex min-h-[72px] max-w-[1360px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 py-4 sm:flex-nowrap lg:px-10">
         <BrandLogo href="/" priority size="md" variant={isOverlay ? "light" : "dark"} />
-        <nav className={cn("hidden items-center gap-7 text-[14px] font-medium md:flex", isOverlay ? "text-white/86" : "text-ink-700")} aria-label="Public">
-          <Link href="/market">Market</Link>
-          <Link href="/#network">Network</Link>
-          <Link href="/#surplus">Surplus</Link>
-          <Link href="/login">Sign in</Link>
-          <Link href="/dashboard">Dashboard</Link>
+        <nav
+          className={cn(
+            "flex w-full min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-[13px] font-semibold sm:w-auto sm:flex-1 sm:justify-end sm:gap-x-5 md:gap-x-7 md:text-[14px]",
+            isOverlay ? "text-white/86" : "text-ink-700"
+          )}
+          aria-label="Public"
+        >
+          <Link className={cn("fn-header-link", isOverlay && "fn-header-link-on-dark")} href="/market">
+            Market
+          </Link>
+          <Link className={cn("fn-header-link", isOverlay && "fn-header-link-on-dark")} href="/#network">
+            Network
+          </Link>
+          <Link className={cn("fn-header-link", isOverlay && "fn-header-link-on-dark")} href="/#surplus">
+            Surplus
+          </Link>
+          <Link className={cn("fn-header-link", isOverlay && "fn-header-link-on-dark")} href="/login">
+            Sign in
+          </Link>
+          <Link className={cn("fn-header-link", isOverlay && "fn-header-link-on-dark")} href="/dashboard">
+            Dashboard
+          </Link>
         </nav>
-        <div className="flex items-center gap-2">
-          <ButtonLink href="/market" variant={isOverlay ? "onDark" : "secondary"} className="hidden sm:inline-flex">
+        <div className="hidden lg:block">
+          <ButtonLink href="/market" variant={isOverlay ? "onDark" : "secondary"} className="fn-header-market-button rounded-full px-5">
             Browse market
-          </ButtonLink>
-          <ButtonLink href="/register" variant={isOverlay ? "onDark" : "primary"} className="hidden md:inline-flex">
-            Create account
           </ButtonLink>
         </div>
       </div>

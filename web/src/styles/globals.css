@@ -54,21 +54,25 @@
 html {
   background: var(--color-canvas);
   color: var(--color-ink-900);
+  overflow-x: clip;
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: clip;
   font-family: var(--font-sans);
   letter-spacing: 0;
   text-rendering: geometricPrecision;
   -webkit-tap-highlight-color: rgb(185 109 66 / 18%);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 button,
@@ -194,6 +198,73 @@ h2 {
   transform-origin: left;
 }
 
+.fn-brand-logo {
+  transform: scale(1);
+  transition: transform var(--duration-fast) var(--ease-farm-out);
+  transform-origin: center;
+}
+
+.fn-brand-logo:hover,
+.fn-brand-logo:focus-visible {
+  transform: scale(1.05);
+}
+
+.fn-brand-logo:active {
+  transform: scale(1.02);
+}
+
+.fn-header-link {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: inherit;
+  transition: color var(--duration-medium) var(--ease-farm-out);
+}
+
+.fn-header-link::after {
+  position: absolute;
+  right: 0;
+  bottom: 7px;
+  left: 0;
+  height: 1px;
+  content: "";
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--duration-medium) var(--ease-farm-out);
+}
+
+.fn-header-link:hover,
+.fn-header-link:focus-visible {
+  color: var(--color-primary-700);
+}
+
+.fn-header-link-on-dark:hover,
+.fn-header-link-on-dark:focus-visible {
+  color: #c9f89a;
+}
+
+.fn-header-link:hover::after,
+.fn-header-link:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.fn-header-market-button:hover,
+.fn-header-market-button:focus-visible {
+  border-color: var(--color-primary-700);
+  background: var(--color-primary-700);
+  color: #ffffff !important;
+  box-shadow: 0 12px 28px rgb(7 17 11 / 18%);
+}
+
+.fn-header-market-button:active {
+  border-color: var(--color-primary-800);
+  background: var(--color-primary-800);
+  color: #ffffff !important;
+}
+
 @keyframes fn-hero-drift {
   from {
     transform: scale(1.02) translate3d(-0.4%, -0.2%, 0);
@@ -237,6 +308,15 @@ h2 {
   }
 }
 
+@media (max-width: 639px) {
+  .fn-hero-media,
+  .fn-produce-image,
+  .fn-produce-panel:hover .fn-produce-image {
+    animation: none;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -251,6 +331,9 @@ h2 {
   .fn-lift-card:focus-within,
   .fn-market-row:hover,
   .fn-market-row:focus-within,
+  .fn-brand-logo:hover,
+  .fn-brand-logo:focus-visible,
+  .fn-brand-logo:active,
   .fn-produce-panel:hover .fn-produce-image {
     transform: none;
   }

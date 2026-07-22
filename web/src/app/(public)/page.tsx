@@ -261,7 +261,7 @@ export default function HomePage() {
         <section className="py-20 lg:py-28">
           <div className="mx-auto max-w-[1360px] px-5 lg:px-10">
             <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold uppercase text-primary-700">Public market</p>
                 <h2 className="mt-4 text-5xl font-semibold leading-none text-ink-950 md:text-6xl">
                   Searchable, shareable, ready for rural connections.
@@ -280,7 +280,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-border bg-surface p-4 shadow-[0_24px_60px_rgba(16,32,24,0.08)]">
+              <div className="min-w-0 rounded-lg border border-border bg-surface p-4 shadow-[0_24px_60px_rgba(16,32,24,0.08)]">
                 <div className="flex items-center justify-between border-b border-border pb-4">
                   <div>
                     <p className="text-sm font-semibold text-ink-500">Live market preview</p>

@@ -251,7 +251,7 @@ export function MarketExperience() {
               {activeFilters.map((filter) => (
                 <motion.button
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-brand-border bg-white px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-visible:ring-3 focus-visible:ring-primary-600/30"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-brand-border bg-white px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-700 hover:bg-primary-700 hover:text-white active:border-primary-800 active:bg-primary-800 active:text-white focus-visible:ring-3 focus-visible:ring-primary-600/30"
                   exit={{ opacity: 0, scale: 0.96, y: -4 }}
                   initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: -4 }}
                   key={filter.key}

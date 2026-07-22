@@ -32,7 +32,15 @@ export function BrandLogo({ className, href, label = "FarmNomad", priority = fal
 
   if (href) {
     return (
-      <Link aria-label={label} className={cn("inline-flex min-h-11 shrink-0 items-center rounded-lg focus-visible:ring-3 focus-visible:ring-primary-600/30", sizes[size], className)} href={href}>
+      <Link
+        aria-label={label}
+        className={cn(
+          "fn-brand-logo inline-flex min-h-11 shrink-0 items-center rounded-lg focus-visible:ring-3 focus-visible:ring-primary-600/30",
+          sizes[size],
+          className
+        )}
+        href={href}
+      >
         {image}
       </Link>
     );
