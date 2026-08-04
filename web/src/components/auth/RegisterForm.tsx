@@ -48,7 +48,7 @@ export function RegisterForm() {
 
   return (
     <form className="mt-6 grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <TextField label="Display name" id="displayName" autoComplete="name" error={formState.errors.displayName?.message} {...register("displayName")} />
         <TextField label="Email" id="email" type="email" autoComplete="email" error={formState.errors.email?.message} spellCheck={false} {...register("email")} />
       </div>
@@ -72,7 +72,7 @@ export function RegisterForm() {
           {formError}
         </p>
       ) : null}
-      <Button disabled={isLoading} type="submit">
+      <Button className="fn-bounce" disabled={isLoading} type="submit">
         {isLoading ? "Creating account…" : "Create account"}
       </Button>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs font-semibold text-ink-500">

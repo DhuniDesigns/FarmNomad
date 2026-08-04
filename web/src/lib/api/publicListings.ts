@@ -16,7 +16,9 @@ const fallbackListings: Listing[] = [
     location: "Greater Manchester",
     vendorName: "Northfield Farm",
     status: "ACTIVE",
-    surplus: false
+    surplus: false,
+    pickupLat: null,
+    pickupLng: null
   },
   {
     id: "22222222-2222-4222-8222-222222222222",
@@ -29,7 +31,9 @@ const fallbackListings: Listing[] = [
     location: "Lancashire",
     vendorName: "Moss Lane Orchard",
     status: "ACTIVE",
-    surplus: true
+    surplus: true,
+    pickupLat: null,
+    pickupLng: null
   }
 ];
 
@@ -146,6 +150,8 @@ function normalizeListing(value: unknown): Listing {
     location: String(listing.location ?? "United Kingdom"),
     vendorName: String(listing.vendorName ?? "FarmNomad Vendor"),
     status: listing.status === "ARCHIVED" || listing.status === "SOLD_OUT" ? listing.status : "ACTIVE",
-    surplus: Boolean(listing.surplus)
+    surplus: Boolean(listing.surplus),
+    pickupLat: typeof listing.pickupLat === "number" ? listing.pickupLat : null,
+    pickupLng: typeof listing.pickupLng === "number" ? listing.pickupLng : null
   };
 }

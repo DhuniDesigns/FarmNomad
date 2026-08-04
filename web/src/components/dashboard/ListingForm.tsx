@@ -9,11 +9,13 @@ import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
+import { LocationPicker } from "@/components/map/LocationPicker";
 import { useCreateListingMutation, useMyListingsQuery, useUpdateListingMutation } from "@/lib/api/listingsApi";
 import { extractApiErrorMessage } from "@/lib/api/errorMessage";
 import { revalidateMarket } from "@/lib/api/revalidateMarket";
 import { triggerHaptic } from "@/lib/interactions";
 import type { ListingMutationInput } from "@/types/listing";
+import type { LatLng } from "@/types/geo";
 
 // Matches the filterable values on /market (MarketExperience.tsx) so a
 // published listing is actually reachable through the public browse filters.
@@ -37,7 +39,13 @@ const listingSchema = z.object({
   quantity: z.number().min(0, "Quantity can't be negative."),
   unit: z.enum(["kg", "box", "crate", "tray", "case", "bundle"]),
   location: z.string().min(2),
-  surplus: z.boolean()
+  surplus: z.boolean(),
+  // Optional precision pickup pin from LocationPicker. Both null (the
+  // default) means "no manual pin" — the backend geocodes the region text
+  // instead. Setting both marks the listing MANUAL on the backend, which
+  // always wins over that automatic geocode (ListingService#applyGeocode).
+  pickupLat: z.number().nullable(),
+  pickupLng: z.number().nullable()
 });
 
 type FormState = z.infer<typeof listingSchema>;
@@ -50,7 +58,9 @@ const defaultInput: FormState = {
   quantity: 10,
   unit: "crate",
   location: "Lancashire",
-  surplus: false
+  surplus: false,
+  pickupLat: null,
+  pickupLng: null
 };
 
 export function ListingForm({ id }: { id?: string }) {
@@ -82,7 +92,9 @@ export function ListingForm({ id }: { id?: string }) {
       quantity: existing.quantity,
       unit: units.includes(existing.unit) ? (existing.unit as FormState["unit"]) : "crate",
       location: existing.location,
-      surplus: existing.surplus
+      surplus: existing.surplus,
+      pickupLat: existing.pickupLat,
+      pickupLng: existing.pickupLng
     };
     setForm(hydrated);
     initialFormRef.current = hydrated;
@@ -107,6 +119,10 @@ export function ListingForm({ id }: { id?: string }) {
 
   function setValue<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function setPickup(position: LatLng | null) {
+    setForm((current) => ({ ...current, pickupLat: position?.lat ?? null, pickupLng: position?.lng ?? null }));
   }
 
   async function submit() {
@@ -225,6 +241,13 @@ export function ListingForm({ id }: { id?: string }) {
               }} />
               Surplus or donation listing
             </label>
+          </FormSection>
+
+          <FormSection title="Precise pickup pin (optional)" description="Drop a pin on the exact collection point so buyers can see distance and a map, on top of the region above.">
+            <LocationPicker
+              value={form.pickupLat != null && form.pickupLng != null ? { lat: form.pickupLat, lng: form.pickupLng } : null}
+              onChange={setPickup}
+            />
           </FormSection>
 
           {error ? (

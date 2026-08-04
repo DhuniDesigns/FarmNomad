@@ -213,6 +213,28 @@ h2 {
   transform: scale(1.02);
 }
 
+/* Spring-eased "bounce" hover for auth-page CTAs — deliberately scoped via
+   this class rather than added to the shared Button component, so it
+   doesn't change hover feel on every button across the app. */
+.fn-bounce {
+  transition:
+    background-color var(--duration-medium) var(--ease-farm-out),
+    border-color var(--duration-medium) var(--ease-farm-out),
+    color var(--duration-medium) var(--ease-farm-out),
+    box-shadow var(--duration-medium) var(--ease-farm-out),
+    transform var(--duration-fast) var(--ease-farm-spring);
+}
+
+.fn-bounce:hover,
+.fn-bounce:focus-visible {
+  transform: translateY(-2px) scale(1.045);
+}
+
+.fn-bounce:active {
+  transform: scale(0.97);
+  transition: transform var(--duration-fast) var(--ease-farm-out);
+}
+
 .fn-header-link {
   position: relative;
   display: inline-flex;
@@ -334,6 +356,9 @@ h2 {
   .fn-brand-logo:hover,
   .fn-brand-logo:focus-visible,
   .fn-brand-logo:active,
+  .fn-bounce:hover,
+  .fn-bounce:focus-visible,
+  .fn-bounce:active,
   .fn-produce-panel:hover .fn-produce-image {
     transform: none;
   }

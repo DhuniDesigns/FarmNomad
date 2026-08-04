@@ -12,6 +12,9 @@ export type Listing = {
   vendorName: string;
   status: ListingStatus;
   surplus: boolean;
+  /** Optional precise pickup pin (V6__add_geolocation.sql). Null until a listing has been geocoded or manually pinned. */
+  pickupLat: number | null;
+  pickupLng: number | null;
 };
 
 export type ListingPage = {
@@ -40,9 +43,17 @@ export type OwnedListing = {
   status: ListingStatus;
   surplus: boolean;
   createdAt: string;
+  pickupLat: number | null;
+  pickupLng: number | null;
 };
 
-/** Body for POST /api/listings and PUT /api/listings/{id} — mirrors the backend's ListingRequest record. */
+/**
+ * Body for POST /api/listings and PUT /api/listings/{id} — mirrors the
+ * backend's ListingRequest record. pickupLat/pickupLng are nullable, optional
+ * manual-pin fields: sending both means "this is a MANUAL pin, always wins
+ * over automatic region geocoding" (see ListingService#applyGeocode);
+ * omitting/nulling them leaves geocode-on-write to the backend.
+ */
 export type ListingMutationInput = {
   title: string;
   description?: string;
@@ -52,4 +63,6 @@ export type ListingMutationInput = {
   unit: string;
   location: string;
   surplus: boolean;
+  pickupLat?: number | null;
+  pickupLng?: number | null;
 };

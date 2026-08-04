@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, ShieldCheck } from "lucide-react";
+import { LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import { BackLink, safeInternalHref } from "@/components/ui/BackLink";
-import { ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { MarketListingCard } from "@/components/market/MarketListingCard";
+import { MapView } from "@/components/map/MapView";
 import { formatCurrency } from "@/lib/utils";
+import { formatDistance, haversineKm } from "@/lib/geo/distance";
+import { useGeolocation } from "@/lib/hooks/useGeolocation";
 import type { Listing } from "@/types/listing";
 
 function returnHrefFromLocation() {
@@ -34,6 +37,7 @@ type ListingDetailExperienceProps = {
  */
 export function ListingDetailExperience({ listing, relatedListings }: ListingDetailExperienceProps) {
   const [returnHref, setReturnHref] = useState("/market");
+  const geolocation = useGeolocation();
 
   useEffect(() => {
     setReturnHref(returnHrefFromLocation());
@@ -43,6 +47,8 @@ export function ListingDetailExperience({ listing, relatedListings }: ListingDet
   const backLabel = returnHref.includes("?") ? "Back to results" : "Back to market";
   const initial = listing.title.trim().charAt(0).toUpperCase() || "F";
   const unavailable = listing.status === "SOLD_OUT";
+  const hasPickupPin = listing.pickupLat != null && listing.pickupLng != null;
+  const pickupPin = hasPickupPin ? { lat: listing.pickupLat as number, lng: listing.pickupLng as number } : null;
 
   return (
     <main className="min-h-screen bg-canvas">
@@ -70,7 +76,25 @@ export function ListingDetailExperience({ listing, relatedListings }: ListingDet
               <dl className="grid gap-4 border-y border-border py-5 sm:grid-cols-2">
                 <Metric label="Available" value={`${listing.quantity} ${listing.unit}`} />
                 <Metric label="Location" value={listing.location} />
+                {pickupPin && geolocation.position ? (
+                  <Metric label="Distance from you" value={`~${formatDistance(haversineKm(geolocation.position, pickupPin))}`} />
+                ) : null}
               </dl>
+
+              {pickupPin ? (
+                <div className="grid gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-ink-900">Pickup location</p>
+                    {!geolocation.position ? (
+                      <Button type="button" variant="secondary" loading={geolocation.loading} onClick={geolocation.request}>
+                        <LocateFixed aria-hidden="true" size={16} /> Show distance from me
+                      </Button>
+                    ) : null}
+                  </div>
+                  {geolocation.error ? <p className="text-xs font-medium text-danger-600">{geolocation.error}</p> : null}
+                  <MapView center={pickupPin} zoom={13} height={260} interactive={false} markers={[{ position: pickupPin }]} />
+                </div>
+              ) : null}
             </div>
           </section>
 

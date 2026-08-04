@@ -72,7 +72,15 @@ Not one of the phases above — built from an uploaded maps/geolocation spec, no
 
 **Status (2026-08-04):** Done — `GeocodingService` (postcodes.io + Mapbox fallback), coordinates + geocode-on-write for `Listing` and `User` (manual-pin-wins, re-geocode-only-if-changed), `DriverLocation` entity + REST endpoints, `GET /api/geo/postcode/{postcode}` + `/reverse`, `GET /api/surplus/nearby`, and secured live driver-location tracking over the existing STOMP infrastructure (new `StompAuthChannelInterceptor` — the WebSocket layer had no authentication or subscription authorization at all before this). See `docs/API-SPEC.md` §11 for the endpoint contract.
 
-**Not done / deferred:** Order pickup/delivery coordinate snapshots, Organisation lat/lng, order-scoped (vs. self-or-ADMIN) driver-location subscription authorization, `RoutingService`/route-distance caching, `sort=distance` on `GET /api/listings` (columns exist now, but the endpoint has no reference-point param), automated tests for `GeocodingServiceImpl`'s actual HTTP calls, and any frontend `LocationPicker`/map UI (§11 of the original Frontend Build Spec this was meant to unblock — not started).
+**Not done / deferred:** Order pickup/delivery coordinate snapshots, Organisation lat/lng, order-scoped (vs. self-or-ADMIN) driver-location subscription authorization, `RoutingService`/route-distance caching, `sort=distance` on `GET /api/listings` (columns exist now, but the endpoint has no reference-point param), automated tests for `GeocodingServiceImpl`'s actual HTTP calls.
+
+### Frontend maps & geolocation UI (2026-08-04, off-plan)
+
+Follow-up to the backend pass above — built from §11 of `FARMNOMAD-FRONTEND-BUILD-SPEC.md` only (founder's explicit scope choice after the full spec was reconciled against the real frontend; most of the rest targets entities — `Product`/`Cart`/`Checkout`/`Meal`/`Equipment`/`CropScan`/`Subscription` — that don't exist in this codebase). See `docs/DECISIONS.md` "Technical — frontend maps & geolocation UI".
+
+**Status (2026-08-04):** Done — `types/geo.ts`, `lib/geo/distance.ts` (haversine/formatDistance), `pickupLat`/`pickupLng` added to `Listing`/`OwnedListing`/`ListingMutationInput`, `geoApi.ts` (backend-proxied postcode lookup, no direct third-party calls from the browser), `useGeolocation.ts`, `MapView`/`MapCanvas` (token-aware, `next/dynamic` + `ssr:false`, graceful placeholder without `NEXT_PUBLIC_MAPBOX_TOKEN`), `LocationPicker` (drag/click/postcode-search/use-my-location pin picker) wired into `ListingForm` alongside the existing region dropdown, `DistanceBadge` wired into `MarketListingCard` + an opt-in "Show distance from me" control on `/market`, and a static pickup-pin map + distance metric on the listing detail page.
+
+**Not done / deferred:** `npm install` for the two new dependencies (`react-map-gl`, `mapbox-gl`) hasn't been run — no compatible Node toolchain in this sandbox; live driver-tracking map UI (`DriverJobMap`/`OrderRouteMap` from the spec — blocked on `Order` persistence, same as backend unresolved question §23); Mapbox Directions-based single-route distance (list views intentionally stay haversine-only per the spec's "cost rule," but a detail-page routing call was never built either). See `docs/DECISIONS.md` unresolved questions §25–26.
 
 ## Phase 4 — Orders dashboard
 

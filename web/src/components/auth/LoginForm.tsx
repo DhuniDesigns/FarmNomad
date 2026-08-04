@@ -57,7 +57,7 @@ export function LoginForm() {
           {formError}
         </p>
       ) : null}
-      <Button disabled={isLoading} type="submit">
+      <Button className="fn-bounce" disabled={isLoading} type="submit">
         {isLoading ? "Signing in…" : "Sign in"}
       </Button>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs font-semibold text-ink-500">

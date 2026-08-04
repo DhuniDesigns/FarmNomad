@@ -123,6 +123,8 @@ Standard CRUD per entity (see Postman collection for exact shapes). Not on the w
 
 Built from an uploaded maps/geolocation spec that assumed `Order` and `Organisation` already had real JPA entities and tables — neither does yet (both are empty stub `@Service`/`@RestController` classes; Phase 4 "Orders dashboard" is still unbuilt). This pass covers only what has real persistence today: `Listing` (the spec's "Product") and `User`. Order coordinate snapshots and Organisation coordinates are deferred until those entities exist — see DECISIONS.md.
 
+**Frontend (2026-08-04):** `GET /api/geo/postcode/{postcode}` is consumed by the web app's `geoApi.ts` (RTK Query, injected into the shared authenticated `baseApi`) — the browser never calls postcodes.io/Mapbox directly, nor holds a geocoding key. Map *rendering* (`MapView`/`LocationPicker`/`DistanceBadge`) is a separate concern from geocoding and uses its own client-side `NEXT_PUBLIC_MAPBOX_TOKEN` (see `.env.example`) purely to draw tiles — that token never touches the backend. See DECISIONS.md "Technical — frontend maps & geolocation UI".
+
 | Method & path | Auth | Notes |
 |---|---|---|
 | GET `/api/geo/postcode/{postcode}` | authenticated | `{ lat, lng, postcode }`. Proxies postcodes.io so the frontend never needs a key. 404 if not a resolvable UK postcode. |

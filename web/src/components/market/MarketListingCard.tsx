@@ -4,12 +4,16 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { DistanceBadge } from "@/components/map/DistanceBadge";
 import type { Listing } from "@/types/listing";
+import type { LatLng } from "@/types/geo";
 import { formatCurrency } from "@/lib/utils";
 
 type MarketListingCardProps = {
   listing: Listing;
   returnHref?: string;
+  /** The visitor's own position, opted into via MarketExperience's "Show distance from me" — renders a DistanceBadge when both this and the listing's pickup pin exist. */
+  userPosition?: LatLng | null;
 };
 
 /**
@@ -19,10 +23,11 @@ type MarketListingCardProps = {
  * a collection window yet, so this card only renders fields that genuinely
  * exist today rather than inventing placeholder data.
  */
-export function MarketListingCard({ listing, returnHref }: MarketListingCardProps) {
+export function MarketListingCard({ listing, returnHref, userPosition }: MarketListingCardProps) {
   const reduceMotion = useReducedMotion();
   const detailHref = returnHref ? `/market/${listing.id}?from=${encodeURIComponent(returnHref)}` : `/market/${listing.id}`;
   const initial = listing.title.trim().charAt(0).toUpperCase() || "F";
+  const showDistance = userPosition && listing.pickupLat != null && listing.pickupLng != null;
 
   return (
     <motion.article
@@ -42,6 +47,7 @@ export function MarketListingCard({ listing, returnHref }: MarketListingCardProp
         <div className="flex flex-wrap items-center gap-2">
           <Badge>{listing.category}</Badge>
           {listing.surplus ? <Badge tone="amber">Surplus</Badge> : null}
+          {showDistance ? <DistanceBadge from={userPosition!} to={{ lat: listing.pickupLat!, lng: listing.pickupLng! }} /> : null}
         </div>
         <div className="min-w-0">
           <Link href={detailHref} className="block text-[20px] font-semibold leading-snug text-ink-900 transition-colors duration-150 ease-[var(--ease-farm-out)] group-hover:text-primary-700">

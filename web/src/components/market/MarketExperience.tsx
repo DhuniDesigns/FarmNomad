@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { LocateFixed, Search, SlidersHorizontal, X } from "lucide-react";
 import { MarketListingCard } from "./MarketListingCard";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
+import { useGeolocation } from "@/lib/hooks/useGeolocation";
 import { triggerHaptic } from "@/lib/interactions";
 import type { ListingPage } from "@/types/listing";
 
@@ -53,6 +54,9 @@ export function MarketExperience({ filters, listingPage, backendError }: MarketE
   const closeFiltersRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotion();
+  // Opt-in only — never requested on load, only from this button's click, so
+  // no page silently prompts a visitor for their location.
+  const geolocation = useGeolocation();
 
   const activeFilters = [
     filters.q ? { key: "q" as const, label: `Search: ${filters.q}` } : null,
@@ -144,6 +148,18 @@ export function MarketExperience({ filters, listingPage, backendError }: MarketE
           </option>
         ))}
       </SelectField>
+      <Button
+        type="button"
+        variant="secondary"
+        loading={geolocation.loading}
+        onClick={() => {
+          triggerHaptic("selection");
+          geolocation.request();
+        }}
+      >
+        <LocateFixed aria-hidden="true" size={16} /> {geolocation.position ? "Distance from me on" : "Show distance from me"}
+      </Button>
+      {geolocation.error ? <p className="text-xs font-medium text-danger-600">{geolocation.error}</p> : null}
       <Button type="button" variant="secondary" onClick={resetFilters}>
         Reset filters
       </Button>
@@ -255,7 +271,7 @@ export function MarketExperience({ filters, listingPage, backendError }: MarketE
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 <AnimatePresence mode="popLayout">
                 {listingPage.content.map((listing) => (
-                  <MarketListingCard key={listing.id} listing={listing} returnHref={buildHref(filters)} />
+                  <MarketListingCard key={listing.id} listing={listing} returnHref={buildHref(filters)} userPosition={geolocation.position} />
                 ))}
                 </AnimatePresence>
               </div>
