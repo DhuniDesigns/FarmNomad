@@ -8,73 +8,89 @@ import { z } from "zod";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { EditorialImage } from "@/components/ui/EditorialImage";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
-import { getListing, useDemoStore } from "@/lib/demo/store";
+import { useCreateListingMutation, useMyListingsQuery, useUpdateListingMutation } from "@/lib/api/listingsApi";
+import { extractApiErrorMessage } from "@/lib/api/errorMessage";
+import { revalidateMarket } from "@/lib/api/revalidateMarket";
 import { triggerHaptic } from "@/lib/interactions";
-import type { ListingCategory, ListingInput, ListingStatus } from "@/lib/demo/types";
+import type { ListingMutationInput } from "@/types/listing";
 
+// Matches the filterable values on /market (MarketExperience.tsx) so a
+// published listing is actually reachable through the public browse filters.
+const categories = ["Vegetables", "Fruit", "Dairy", "Bakery", "Prepared food", "Herbs"];
+const locations = ["Lancashire", "Greater Manchester", "Yorkshire"];
+const units = ["kg", "box", "crate", "tray", "case", "bundle"];
+
+/**
+ * Real backend fields only (ListingRequest on the API side). The old demo
+ * form also had harvestDate/bestBefore/handling/collectionWindow/organic/
+ * region+postcode+distanceMiles/image fields — none of those have a column
+ * on `listings` yet (images were explicitly deferred this pass; the rest
+ * are tracked as gaps in docs/DECISIONS.md). Re-add here if/when the schema
+ * grows to support them.
+ */
 const listingSchema = z.object({
   title: z.string().min(3, "Use a clear listing title."),
   category: z.enum(["Vegetables", "Fruit", "Dairy", "Bakery", "Prepared food", "Herbs"]),
   description: z.string().min(20, "Add enough detail for buyers to decide."),
   pricePence: z.number().min(0),
-  quantity: z.number().positive("Quantity must be greater than zero."),
+  quantity: z.number().min(0, "Quantity can't be negative."),
   unit: z.enum(["kg", "box", "crate", "tray", "case", "bundle"]),
-  region: z.string().min(2),
-  postcode: z.string().min(2),
-  distanceMiles: z.number().min(0),
-  surplus: z.boolean(),
-  organic: z.boolean(),
-  status: z.enum(["DRAFT", "ACTIVE", "SOLD_OUT", "EXPIRED", "ARCHIVED"]),
-  harvestDate: z.string().min(1),
-  bestBefore: z.string().min(1),
-  handling: z.string().min(8),
-  collectionWindow: z.string().min(4),
-  colour: z.string().min(4),
-  imageLabel: z.string().min(3),
-  imageUrl: z.string().url("Use a valid image URL."),
-  imageAlt: z.string().min(8, "Describe the listing image.")
+  location: z.string().min(2),
+  surplus: z.boolean()
 });
 
-const defaultInput: ListingInput = {
+type FormState = z.infer<typeof listingSchema>;
+
+const defaultInput: FormState = {
   title: "",
   category: "Vegetables",
   description: "",
   pricePence: 1200,
   quantity: 10,
   unit: "crate",
-  region: "Lancashire",
-  postcode: "PR3",
-  distanceMiles: 8,
-  surplus: false,
-  organic: false,
-  status: "ACTIVE",
-  harvestDate: "2026-07-20",
-  bestBefore: "2026-07-27",
-  handling: "Keep cool and collect within the agreed window.",
-  collectionWindow: "Mon-Fri, 08:00-15:00",
-  colour: "#2D7D46",
-  imageLabel: "Produce lot",
-  imageUrl: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80",
-  imageAlt: "Fresh produce harvested for a local market"
+  location: "Lancashire",
+  surplus: false
 };
 
 export function ListingForm({ id }: { id?: string }) {
   const router = useRouter();
-  const { state, actions } = useDemoStore();
-  const existing = id ? getListing(state, id) : undefined;
-  const [form, setForm] = useState<ListingInput>(() => existing ? { ...existing } : defaultInput);
-  const initialFormRef = useRef<ListingInput>(existing ? { ...existing } : defaultInput);
+  const { data: mine, isLoading: loadingMine } = useMyListingsQuery(undefined, { skip: !id });
+  const existing = id ? mine?.find((listing) => listing.id === id) : undefined;
+  const [createListing] = useCreateListingMutation();
+  const [updateListing] = useUpdateListingMutation();
+
+  const [form, setForm] = useState<FormState>(defaultInput);
+  const initialFormRef = useRef<FormState>(defaultInput);
+  const hydratedRef = useRef(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const reduceMotion = useReducedMotion();
 
+  // The form starts empty (or with defaults) and hydrates once "mine" loads
+  // and the matching listing is found — there's no single-listing
+  // authenticated GET, so editing reuses the already-fetched "mine" list.
+  useEffect(() => {
+    if (!id || hydratedRef.current || !existing) return;
+    const hydrated: FormState = {
+      title: existing.title,
+      category: categories.includes(existing.category) ? (existing.category as FormState["category"]) : "Vegetables",
+      description: existing.description,
+      pricePence: existing.pricePence,
+      quantity: existing.quantity,
+      unit: units.includes(existing.unit) ? (existing.unit as FormState["unit"]) : "crate",
+      location: existing.location,
+      surplus: existing.surplus
+    };
+    setForm(hydrated);
+    initialFormRef.current = hydrated;
+    hydratedRef.current = true;
+  }, [id, existing]);
+
   const heading = id ? "Edit listing" : "Create listing";
   const submitLabel = id ? "Save listing" : "Publish listing";
-  const preview = useMemo(() => form.imageLabel || form.title || "Produce lot", [form.imageLabel, form.title]);
   const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialFormRef.current), [form]);
 
   useEffect(() => {
@@ -89,11 +105,11 @@ export function ListingForm({ id }: { id?: string }) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
-  function setValue<K extends keyof ListingInput>(key: K, value: ListingInput[K]) {
+  function setValue<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  function submit() {
+  async function submit() {
     setSubmitting(true);
     const parsed = listingSchema.safeParse(form);
     if (!parsed.success) {
@@ -103,13 +119,26 @@ export function ListingForm({ id }: { id?: string }) {
       window.requestAnimationFrame(() => errorRef.current?.focus());
       return;
     }
-    triggerHaptic("success");
-    if (id) {
-      actions.updateListing(id, parsed.data);
-      router.push("/listings");
-    } else {
-      const createdId = actions.createListing(parsed.data);
-      router.push(`/market/${createdId}`);
+
+    const body: ListingMutationInput = parsed.data;
+
+    try {
+      if (id) {
+        await updateListing({ id, body }).unwrap();
+        triggerHaptic("success");
+        void revalidateMarket(id);
+        router.push("/listings");
+      } else {
+        const created = await createListing(body).unwrap();
+        triggerHaptic("success");
+        void revalidateMarket(created.id);
+        router.push(`/market/${created.id}`);
+      }
+    } catch (submitError) {
+      setSubmitting(false);
+      setError(extractApiErrorMessage(submitError, "Couldn't save the listing. Try again."));
+      triggerHaptic("error");
+      window.requestAnimationFrame(() => errorRef.current?.focus());
     }
   }
 
@@ -133,6 +162,25 @@ export function ListingForm({ id }: { id?: string }) {
     router.push("/listings");
   }
 
+  if (id && loadingMine && !hydratedRef.current) {
+    return (
+      <main className="mx-auto max-w-[1280px] px-5 py-8 lg:px-8">
+        <p className="text-sm font-semibold text-ink-500">Loading listing…</p>
+      </main>
+    );
+  }
+
+  if (id && !loadingMine && !existing) {
+    return (
+      <main className="mx-auto max-w-[1280px] px-5 py-8 lg:px-8">
+        <BackLink href="/listings" label="Back to listings" fallbackHref="/listings" />
+        <p className="mt-5 text-sm font-semibold text-ink-700">
+          That listing isn&apos;t in your account — it may have been removed, or it belongs to someone else.
+        </p>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-[1280px] px-5 py-8 lg:px-8">
       <div className="mb-7">
@@ -140,7 +188,7 @@ export function ListingForm({ id }: { id?: string }) {
         <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-primary-700">Vendor listing</p>
         <h1 className="font-editorial mt-2 text-5xl leading-none text-ink-900 md:text-6xl">{heading}</h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-ink-700">
-          Describe the lot, set a clear collection window, and publish into the public market.
+          Describe the lot and set a clear price and quantity before publishing into the public market.
         </p>
       </div>
 
@@ -149,62 +197,34 @@ export function ListingForm({ id }: { id?: string }) {
           <FormSection title="Lot basics" description="Use buyer-facing language and avoid internal shorthand.">
             <div className="grid gap-4 md:grid-cols-2">
               <TextField label="Title" value={form.title} onChange={(event) => setValue("title", event.target.value)} />
-              <SelectField label="Category" value={form.category} onChange={(event) => setValue("category", event.target.value as ListingCategory)}>
-                {["Vegetables", "Fruit", "Dairy", "Bakery", "Prepared food", "Herbs"].map((category) => <option key={category}>{category}</option>)}
+              <SelectField label="Category" value={form.category} onChange={(event) => setValue("category", event.target.value as FormState["category"])}>
+                {categories.map((category) => <option key={category}>{category}</option>)}
               </SelectField>
             </div>
             <TextAreaField label="Description" value={form.description} onChange={(event) => setValue("description", event.target.value)} />
           </FormSection>
 
           <FormSection title="Availability and pricing">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-3">
               <TextField label="Price in pence" type="number" min="0" value={form.pricePence} onChange={(event) => setValue("pricePence", Number(event.target.value))} />
-              <TextField label="Quantity" type="number" min="1" value={form.quantity} onChange={(event) => setValue("quantity", Number(event.target.value))} />
-              <SelectField label="Unit" value={form.unit} onChange={(event) => setValue("unit", event.target.value as ListingInput["unit"])}>
-                {["kg", "box", "crate", "tray", "case", "bundle"].map((unit) => <option key={unit}>{unit}</option>)}
-              </SelectField>
-              <SelectField label="Status" value={form.status} onChange={(event) => setValue("status", event.target.value as ListingStatus)}>
-                {["DRAFT", "ACTIVE", "SOLD_OUT", "EXPIRED", "ARCHIVED"].map((status) => <option key={status}>{status}</option>)}
+              <TextField label="Quantity" type="number" min="0" value={form.quantity} onChange={(event) => setValue("quantity", Number(event.target.value))} />
+              <SelectField label="Unit" value={form.unit} onChange={(event) => setValue("unit", event.target.value as FormState["unit"])}>
+                {units.map((unit) => <option key={unit}>{unit}</option>)}
               </SelectField>
             </div>
           </FormSection>
 
           <FormSection title="Collection details">
-            <div className="grid gap-4 md:grid-cols-3">
-              <TextField label="Region" value={form.region} onChange={(event) => setValue("region", event.target.value)} />
-              <TextField label="Postcode" value={form.postcode} onChange={(event) => setValue("postcode", event.target.value)} />
-              <TextField label="Distance miles" type="number" min="0" value={form.distanceMiles} onChange={(event) => setValue("distanceMiles", Number(event.target.value))} />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <TextField label="Harvest date" type="date" value={form.harvestDate} onChange={(event) => setValue("harvestDate", event.target.value)} />
-              <TextField label="Best before" type="date" value={form.bestBefore} onChange={(event) => setValue("bestBefore", event.target.value)} />
-            </div>
-            <TextField label="Collection window" value={form.collectionWindow} onChange={(event) => setValue("collectionWindow", event.target.value)} />
-            <TextAreaField label="Handling notes" value={form.handling} onChange={(event) => setValue("handling", event.target.value)} />
-          </FormSection>
-
-          <FormSection title="Image and flags">
-            <div className="grid gap-4 md:grid-cols-2">
-              <TextField label="Image label" value={form.imageLabel} onChange={(event) => setValue("imageLabel", event.target.value)} />
-              <TextField label="Image URL" value={form.imageUrl} onChange={(event) => setValue("imageUrl", event.target.value)} />
-            </div>
-            <TextField label="Image alt text" value={form.imageAlt} onChange={(event) => setValue("imageAlt", event.target.value)} />
-            <div className="grid gap-3 md:grid-cols-2">
-              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900 transition-[background-color,border-color,box-shadow] duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30">
-                <input type="checkbox" checked={form.surplus} onChange={(event) => {
-                  triggerHaptic("selection");
-                  setValue("surplus", event.target.checked);
-                }} />
-                Surplus or donation listing
-              </label>
-              <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900 transition-[background-color,border-color,box-shadow] duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30">
-                <input type="checkbox" checked={form.organic} onChange={(event) => {
-                  triggerHaptic("selection");
-                  setValue("organic", event.target.checked);
-                }} />
-                Organic
-              </label>
-            </div>
+            <SelectField label="Region" value={form.location} onChange={(event) => setValue("location", event.target.value)}>
+              {locations.map((location) => <option key={location}>{location}</option>)}
+            </SelectField>
+            <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-sm font-semibold text-ink-900 transition-[background-color,border-color,box-shadow] duration-150 ease-[var(--ease-farm-out)] hover:border-primary-600 hover:bg-primary-50 focus-within:ring-3 focus-within:ring-primary-600/30">
+              <input type="checkbox" checked={form.surplus} onChange={(event) => {
+                triggerHaptic("selection");
+                setValue("surplus", event.target.checked);
+              }} />
+              Surplus or donation listing
+            </label>
           </FormSection>
 
           {error ? (
@@ -230,11 +250,12 @@ export function ListingForm({ id }: { id?: string }) {
         </section>
 
         <aside className="sticky top-24 h-fit overflow-hidden rounded-2xl border border-border bg-white shadow-[0_1px_18px_rgba(23,35,27,0.04)]">
-          <EditorialImage alt={form.imageAlt || preview} className="aspect-[4/3]" colour={form.colour} label={preview} priority src={form.imageUrl} />
           <div className="p-4">
             <p className="text-lg font-semibold text-ink-900">{form.title || "Listing preview"}</p>
-            <p className="mt-1 text-sm text-ink-700">{form.quantity} {form.unit} - {form.region}</p>
-            <p className="mt-3 text-sm leading-6 text-ink-500">This is how the listing image and core availability details will read on the public market.</p>
+            <p className="mt-1 text-sm text-ink-700">{form.quantity} {form.unit} - {form.location}</p>
+            <p className="mt-3 text-sm leading-6 text-ink-500">
+              Photos aren&apos;t wired up yet — this listing will show without an image on the public market until that lands.
+            </p>
           </div>
         </aside>
       </div>

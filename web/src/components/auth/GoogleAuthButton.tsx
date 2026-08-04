@@ -10,7 +10,7 @@ type GoogleAuthButtonProps = {
 export function GoogleAuthButton({ label, onClick }: GoogleAuthButtonProps) {
   return (
     <button
-      className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full border border-border bg-soft px-4 text-sm font-semibold text-ink-950 transition-[background-color,border-color,box-shadow,color,transform] duration-150 ease-[var(--ease-farm-out)] hover:-translate-y-0.5 hover:border-primary-700 hover:bg-primary-700 hover:text-white hover:shadow-[0_10px_24px_rgba(16,32,24,0.08)] active:translate-y-0 active:scale-[0.99] active:border-primary-800 active:bg-primary-800 active:text-white focus-visible:ring-3 focus-visible:ring-primary-600/30 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
+      className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full border border-border bg-soft px-4 text-sm font-semibold text-ink-950 transition-[background-color,border-color,box-shadow,color,transform] duration-150 ease-[var(--ease-farm-out)] hover:-translate-y-0.5 hover:border-primary-700 hover:bg-primary-700 hover:text-white hover:shadow-[0_10px_24px_rgba(16,32,24,0.08)] active:translate-y-0 active:scale-[0.99] active:border-primary-800 active:bg-primary-800 active:text-white focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
       type="button"
       onClick={() => {
         triggerHaptic("success");

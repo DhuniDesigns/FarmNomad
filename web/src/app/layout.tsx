@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, Manrope } from "next/font/google";
+import { Providers } from "@/components/Providers";
 import "@/styles/globals.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -24,7 +25,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-GB" className={`${instrumentSerif.variable} ${manrope.variable}`} data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

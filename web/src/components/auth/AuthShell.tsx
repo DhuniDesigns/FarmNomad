@@ -33,7 +33,7 @@ export function AuthShell({ children, description, eyebrow, footer, title }: Aut
 
         <div className="flex min-h-full flex-col px-2 py-6 sm:px-6 lg:px-12 lg:py-10">
           <div className="flex items-center justify-between gap-4">
-            <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm font-semibold text-ink-700 transition-colors hover:text-primary-700 focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/market">
+            <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm font-semibold text-ink-700 transition-colors hover:text-primary-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/market">
               <ArrowLeft aria-hidden="true" size={17} />
               Market
             </Link>
@@ -51,8 +51,8 @@ export function AuthShell({ children, description, eyebrow, footer, title }: Aut
           </div>
 
           <nav className="flex flex-wrap justify-center gap-3 text-sm font-semibold text-ink-700 sm:justify-end" aria-label="Auth page links">
-            <Link className="inline-flex min-h-11 items-center rounded-lg px-2 hover:text-primary-700 focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/">Home</Link>
-            <Link className="inline-flex min-h-11 items-center rounded-lg px-2 hover:text-primary-700 focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/market">Browse market</Link>
+            <Link className="inline-flex min-h-11 items-center rounded-lg px-2 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/">Home</Link>
+            <Link className="inline-flex min-h-11 items-center rounded-lg px-2 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/market">Browse market</Link>
           </nav>
         </div>
       </section>

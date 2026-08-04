@@ -10,7 +10,7 @@ export default function RegisterPage() {
       description="Set up a farmer, kitchen, or organisation workspace and start coordinating local supply."
       footer={(
         <>
-          Already have an account? <Link className="inline-flex min-h-11 items-center rounded-lg px-1 font-semibold text-primary-700 hover:text-primary-800 focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/login">Sign in</Link>
+          Already have an account? <Link className="inline-flex min-h-11 items-center rounded-lg px-1 font-semibold text-primary-700 hover:text-primary-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/login">Sign in</Link>
         </>
       )}
     >

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Farm Nomad Frontend"
+  short_description: "FarmNomad frontend quality and browser validation"
+  default_prompt: "Use this skill to design, review, polish, or build FarmNomad frontend interfaces with established visual tokens, responsive checks, accessibility, and Playwright validation."

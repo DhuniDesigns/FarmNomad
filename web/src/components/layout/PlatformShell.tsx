@@ -1,16 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { BarChart3, ClipboardList, LayoutDashboard, LogIn, Settings, ShieldCheck, Store, Users } from "lucide-react";
+import { BarChart3, ClipboardList, LayoutDashboard, Settings, ShieldCheck, Store, Users } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { Toast } from "@/components/ui/Toast";
 import { useDemoStore } from "@/lib/demo/store";
+import { useAppSelector } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+import type { UserRole } from "@/types/auth";
 
-const nav = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  roles: UserRole[];
+};
+
+const nav: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["FARMER", "KITCHEN", "ORGANISATION", "ADMIN"] },
   { href: "/listings", label: "My listings", icon: Store, roles: ["FARMER", "KITCHEN"] },
   { href: "/orders", label: "Orders", icon: ClipboardList, roles: ["FARMER", "KITCHEN", "ORGANISATION", "ADMIN"] },
@@ -18,13 +28,48 @@ const nav = [
   { href: "/admin/users", label: "Users", icon: Users, roles: ["ADMIN"] },
   { href: "/admin/listings", label: "Moderation", icon: BarChart3, roles: ["ADMIN"] },
   { href: "/settings", label: "Settings", icon: Settings, roles: ["FARMER", "KITCHEN", "ORGANISATION", "ADMIN"] }
-] as const;
+];
 
+/**
+ * Real auth gate + identity chrome (sidebar name/role/nav) now come from the
+ * real session (authSlice), not the demo store — showing a fake persona's
+ * name next to a genuinely authenticated user would be actively misleading.
+ * Page CONTENT underneath (dashboard stats, listings/orders tables, admin
+ * tables) still reads useDemoStore — rewiring those to the real backend is
+ * separate, larger work (Phase 3 CRUD and beyond). See docs/DECISIONS.md.
+ *
+ * The old "Switch workspace role" demo button was removed here: flipping
+ * role client-side made sense against fake data, but not once the sidebar
+ * reflects a real signed-in account.
+ */
 export function PlatformShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { state, currentUser, actions } = useDemoStore();
-  const visibleNav = nav.filter((item) => item.roles.includes(currentUser.role as never));
+  const router = useRouter();
+  const { user, bootstrapped } = useAppSelector((state) => state.auth);
+  const { state, actions } = useDemoStore();
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (bootstrapped && !user) {
+      router.replace(`/login?returnTo=${encodeURIComponent(pathname)}`);
+    }
+  }, [bootstrapped, user, pathname, router]);
+
+  if (!bootstrapped) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-canvas">
+        <p className="text-sm font-semibold text-ink-500">Loading your workspace…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // useEffect above is already redirecting; render nothing so protected
+    // content never flashes on screen first.
+    return null;
+  }
+
+  const visibleNav = nav.filter((item) => item.roles.includes(user.role));
 
   return (
     <div className="min-h-screen bg-canvas lg:grid lg:grid-cols-[276px_1fr]">
@@ -36,8 +81,8 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="hidden px-5 lg:block">
           <div className="rounded-xl border border-border bg-soft p-4">
-            <p className="text-sm font-semibold text-ink-900">{currentUser.name}</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-800">{currentUser.role}</p>
+            <p className="text-sm font-semibold text-ink-900">{user.displayName}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-800">{user.role}</p>
           </div>
         </div>
         <nav className="grid grid-cols-2 gap-1 px-3 pb-3 sm:grid-cols-4 lg:mt-5 lg:grid-cols-1 lg:overflow-visible lg:px-3" aria-label="Platform">
@@ -47,7 +92,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
             return (
               <Link
                 className={cn(
-                  "relative flex min-h-11 min-w-0 items-center gap-2 overflow-hidden rounded-lg px-3 text-sm font-semibold text-ink-700 transition-[background-color,color,box-shadow,transform] duration-150 ease-[var(--ease-farm-out)] hover:bg-primary-50 hover:text-ink-900 focus-visible:ring-3 focus-visible:ring-primary-600/30 lg:gap-3",
+                  "relative flex min-h-11 min-w-0 items-center gap-2 overflow-hidden rounded-lg px-3 text-sm font-semibold text-ink-700 transition-[background-color,color,box-shadow,transform] duration-150 ease-[var(--ease-farm-out)] hover:bg-primary-50 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30 lg:gap-3",
                   active && "bg-primary-700 text-[#ffffff] shadow-[0_10px_24px_rgba(21,126,70,0.18)] hover:bg-primary-700 hover:text-[#ffffff]"
                 )}
                 href={item.href}
@@ -71,11 +116,6 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="hidden px-5 py-4 lg:block">
-          <Button className="w-full" type="button" variant="secondary" onClick={() => actions.loginAs(currentUser.role === "ADMIN" ? "FARMER" : "ADMIN")}>
-            <LogIn aria-hidden="true" size={17} /> Switch workspace role
-          </Button>
-        </div>
       </aside>
       <div>
         <header className="hidden border-b border-border bg-white/85 px-6 py-4 backdrop-blur lg:flex lg:items-center lg:justify-between">
@@ -85,7 +125,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-3">
             <Link className="text-sm font-semibold text-ink-700 hover:text-primary-700" href="/market">View market</Link>
-            <Button type="button" variant="secondary" onClick={actions.resetDemo}>Reset workspace</Button>
+            <Button type="button" variant="secondary" onClick={actions.resetDemo}>Reset demo content</Button>
           </div>
         </header>
         <motion.div

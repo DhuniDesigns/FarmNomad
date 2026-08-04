@@ -11,7 +11,7 @@ export default function LoginPage() {
       description="Access your listings, surplus requests, organisation verification, and commitment orders."
       footer={(
         <>
-          New to FarmNomad? <Link className="inline-flex min-h-11 items-center rounded-lg px-1 font-semibold text-primary-700 hover:text-primary-800 focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/register">Create an account</Link>
+          New to FarmNomad? <Link className="inline-flex min-h-11 items-center rounded-lg px-1 font-semibold text-primary-700 hover:text-primary-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30" href="/register">Create an account</Link>
         </>
       )}
     >

@@ -2,112 +2,75 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Heart, MapPin, PackageCheck, ShieldCheck } from "lucide-react";
+import { MapPin, ShieldCheck } from "lucide-react";
 import { BackLink, safeInternalHref } from "@/components/ui/BackLink";
-import { Button, ButtonLink } from "@/components/ui/Button";
-import { EditorialImage } from "@/components/ui/EditorialImage";
+import { ButtonLink } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { TextAreaField, TextField } from "@/components/ui/Field";
-import { Toast } from "@/components/ui/Toast";
-import { ListingCard } from "@/components/market/ListingCard";
-import { getListing, useDemoStore } from "@/lib/demo/store";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { MarketListingCard } from "@/components/market/MarketListingCard";
+import { formatCurrency } from "@/lib/utils";
+import type { Listing } from "@/types/listing";
 
 function returnHrefFromLocation() {
   if (typeof window === "undefined") return "/market";
   return safeInternalHref(new URLSearchParams(window.location.search).get("from"), "/market");
 }
 
-export function ListingDetailExperience({ id }: { id: string }) {
-  const { state, currentUser, actions } = useDemoStore();
-  const listing = getListing(state, id);
-  const vendor = listing ? state.vendors.find((candidate) => candidate.id === listing.vendorId) : undefined;
+type ListingDetailExperienceProps = {
+  listing: Listing;
+  relatedListings: Listing[];
+};
+
+/**
+ * Renders a listing fetched from the real backend (GET /api/listings/{id}).
+ * Deliberately lighter than the old demo version: the backend DTO has no
+ * images, organic flag, distance, harvest date, collection window, handling
+ * notes, or a linkable vendor id, so none of those are invented here. See
+ * docs/DECISIONS.md for the follow-up on richer listing metadata.
+ *
+ * The order/enquire CTA always redirects to /login (Phase 2.3). There's no
+ * real session concept anywhere in this stack yet — the demo store's
+ * `currentUser` always falls back to a fake signed-in user, so it can't be
+ * used to gate this; see docs/DECISIONS.md.
+ */
+export function ListingDetailExperience({ listing, relatedListings }: ListingDetailExperienceProps) {
   const [returnHref, setReturnHref] = useState("/market");
-  const [quantity, setQuantity] = useState("1");
-  const [note, setNote] = useState("");
-  const [name, setName] = useState(currentUser?.name ?? "");
-  const [email, setEmail] = useState(currentUser?.email ?? "");
-  const [error, setError] = useState("");
 
   useEffect(() => {
     setReturnHref(returnHrefFromLocation());
   }, []);
 
-  if (!listing) {
-    return (
-      <main className="min-h-screen bg-canvas px-5 py-10">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-white p-8 text-center">
-          <h1 className="font-editorial text-5xl leading-none text-ink-900">Listing not found</h1>
-          <p className="mt-2 text-ink-700">The listing may have been archived or removed from the workspace.</p>
-          <BackLink className="mt-5" href={returnHref} label="Back to market" />
-        </div>
-      </main>
-    );
-  }
-
-  const favourite = state.favourites.includes(listing.id);
-  const isOwnListing = vendor?.userId === currentUser?.id;
   const listingReturnHref = `/market/${listing.id}?from=${encodeURIComponent(returnHref)}`;
-  const backLabel = returnHref.startsWith("/producers/") ? "Back to producer" : returnHref.includes("?") ? "Back to results" : "Back to market";
-  const relatedListings = state.listings
-    .filter((candidate) => candidate.id !== listing.id && candidate.status === "ACTIVE" && (candidate.vendorId === listing.vendorId || candidate.category === listing.category))
-    .slice(0, 3);
-
-  function submitRequest() {
-    if (!listing) return;
-    const parsedQuantity = Number(quantity);
-    if (!name.trim() || !email.includes("@")) {
-      setError("Enter your name and a valid email.");
-      return;
-    }
-    if (!parsedQuantity || parsedQuantity < 1 || parsedQuantity > listing.quantity) {
-      setError(`Choose a quantity between 1 and ${listing.quantity}.`);
-      return;
-    }
-    setError("");
-    actions.createEnquiry({
-      listingId: listing.id,
-      name,
-      email,
-      quantity: parsedQuantity,
-      note: note || "No extra note supplied."
-    });
-  }
+  const backLabel = returnHref.includes("?") ? "Back to results" : "Back to market";
+  const initial = listing.title.trim().charAt(0).toUpperCase() || "F";
+  const unavailable = listing.status === "SOLD_OUT";
 
   return (
     <main className="min-h-screen bg-canvas">
-      <Toast message={state.toast} onClear={actions.clearToast} />
       <div className="mx-auto max-w-[1360px] px-5 py-8 lg:px-10">
         <BackLink href={returnHref} label={backLabel} />
         <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_410px]">
           <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-[0_1px_18px_rgba(23,35,27,0.05)]">
-            <EditorialImage
-              alt={listing.imageAlt}
-              className="min-h-[360px] md:min-h-[520px]"
-              colour={listing.colour}
-              label={listing.imageLabel}
-              priority
-              src={listing.imageUrl}
-            />
+            <div aria-hidden="true" className="flex min-h-[360px] items-center justify-center bg-primary-50 text-[120px] font-semibold text-primary-700 md:min-h-[520px]">
+              {initial}
+            </div>
             <div className="grid gap-6 p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusPill value={listing.status} />
                 {listing.surplus ? <span className="rounded-md border border-[#e0b889] bg-[#f3e5d7] px-2.5 py-1 text-xs font-semibold text-warning-600">surplus claim</span> : null}
-                {listing.organic ? <span className="rounded-md border border-[#b8d4ef] bg-info-50 px-2.5 py-1 text-xs font-semibold text-info-600">organic</span> : null}
               </div>
               <div>
                 <h1 className="font-editorial max-w-3xl text-5xl leading-[0.95] text-ink-900 md:text-7xl">{listing.title}</h1>
                 <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-700">{listing.description}</p>
               </div>
-              <dl className="grid gap-4 border-y border-border py-5 sm:grid-cols-3">
+              {unavailable ? (
+                <p className="rounded-lg bg-[#f3e5d7] p-4 text-sm font-semibold text-warning-600" role="status">
+                  This listing is currently sold out. Check similar listings below or come back later.
+                </p>
+              ) : null}
+              <dl className="grid gap-4 border-y border-border py-5 sm:grid-cols-2">
                 <Metric label="Available" value={`${listing.quantity} ${listing.unit}`} />
-                <Metric label="Best before" value={formatDate(listing.bestBefore)} />
-                <Metric label="Collection" value={listing.collectionWindow} />
+                <Metric label="Location" value={listing.location} />
               </dl>
-              <div className="grid gap-4 md:grid-cols-2">
-                <InfoBlock icon={<PackageCheck size={18} />} title="Handling notes" text={listing.handling} />
-                <InfoBlock icon={<CalendarDays size={18} />} title="Harvest date" text={formatDate(listing.harvestDate)} />
-              </div>
             </div>
           </section>
 
@@ -117,34 +80,21 @@ export function ListingDetailExperience({ id }: { id: string }) {
               <p className="mt-1 text-4xl font-semibold text-ink-900">{listing.pricePence === 0 ? "Donation" : formatCurrency(listing.pricePence)}</p>
             </div>
             <div className="rounded-xl bg-soft p-4">
-              {vendor ? (
-                <Link className="flex items-center gap-2 text-sm font-semibold text-ink-900 hover:text-primary-700" href={`/producers/${vendor.id}?from=${encodeURIComponent(listingReturnHref)}`}>
-                  <ShieldCheck size={18} /> {vendor.name}
-                </Link>
-              ) : (
-                <p className="flex items-center gap-2 text-sm font-semibold text-ink-900"><ShieldCheck size={18} /> FarmNomad vendor</p>
-              )}
-              <p className="mt-2 text-sm leading-6 text-ink-700">{vendor?.bio}</p>
-              <p className="mt-3 flex items-center gap-1 text-sm font-semibold text-ink-700"><MapPin size={15} /> {listing.postcode}, {listing.region} - {listing.distanceMiles} miles</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-ink-900">
+                <ShieldCheck aria-hidden="true" size={18} /> {listing.vendorName}
+              </p>
+              <p className="mt-3 flex items-center gap-1 text-sm font-semibold text-ink-700">
+                <MapPin aria-hidden="true" size={15} /> {listing.location}
+              </p>
             </div>
 
-            {isOwnListing ? (
-              <ButtonLink href={`/listings/${listing.id}/edit`}>
-                Edit your listing
-              </ButtonLink>
+            {unavailable ? (
+              <p className="rounded-lg border border-dashed border-border p-4 text-sm text-ink-700">This listing is sold out and can&apos;t be ordered right now.</p>
             ) : (
-              <div className="grid gap-3">
-                <TextField label="Your name" value={name} onChange={(event) => setName(event.target.value)} />
-                <TextField label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-                <TextField label={`Quantity (${listing.unit})`} type="number" min="1" max={listing.quantity} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-                <TextAreaField label="Request note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Collection time, organisation need, or kitchen use…" />
-                {error ? <p className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-danger-600" role="alert">{error}</p> : null}
-                <Button type="button" onClick={submitRequest}>{listing.surplus ? "Send claim request" : "Send order request"}</Button>
-              </div>
+              <ButtonLink href={`/login?returnTo=${encodeURIComponent(listingReturnHref)}`}>
+                Sign in to {listing.surplus ? "claim this surplus" : "order"}
+              </ButtonLink>
             )}
-            <Button type="button" variant={favourite ? "primary" : "secondary"} onClick={() => actions.toggleFavourite(listing.id)}>
-              <Heart aria-hidden="true" fill={favourite ? "currentColor" : "none"} size={18} /> {favourite ? "Saved" : "Save listing"}
-            </Button>
           </aside>
         </div>
 
@@ -159,14 +109,7 @@ export function ListingDetailExperience({ id }: { id: string }) {
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {relatedListings.map((candidate) => (
-                <ListingCard
-                  favourite={state.favourites.includes(candidate.id)}
-                  key={candidate.id}
-                  listing={candidate}
-                  returnHref={returnHref}
-                  onToggleFavourite={actions.toggleFavourite}
-                  state={state}
-                />
+                <MarketListingCard key={candidate.id} listing={candidate} returnHref={returnHref} />
               ))}
             </div>
           </section>
@@ -181,15 +124,6 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">{label}</dt>
       <dd className="mt-1 text-lg font-semibold text-ink-900">{value}</dd>
-    </div>
-  );
-}
-
-function InfoBlock({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
-  return (
-    <div className="rounded-xl border border-border p-4">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-900">{icon}{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-ink-700">{text}</p>
     </div>
   );
 }

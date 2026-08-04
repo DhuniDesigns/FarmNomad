@@ -36,7 +36,7 @@ export function BackLink({ className, fallbackHref = "/market", href, label, onN
   return (
     <Link
       className={cn(
-        "inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-primary-700 transition-[background-color,color,transform] duration-150 ease-[var(--ease-farm-out)] hover:bg-soft hover:text-primary-700 active:scale-[0.99] focus-visible:ring-3 focus-visible:ring-accent-500/25 motion-reduce:transition-none motion-reduce:active:scale-100",
+        "inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-primary-700 transition-[background-color,color,transform] duration-150 ease-[var(--ease-farm-out)] hover:bg-soft hover:text-primary-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-accent-500/25 motion-reduce:transition-none motion-reduce:active:scale-100",
         className
       )}
       href={safeHref}

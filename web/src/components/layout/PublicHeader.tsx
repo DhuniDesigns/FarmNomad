@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { ButtonLink } from "@/components/ui/Button";
@@ -9,12 +12,30 @@ type PublicHeaderProps = {
 
 export function PublicHeader({ variant = "default" }: PublicHeaderProps) {
   const isOverlay = variant === "overlay";
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (isOverlay) return;
+
+    function onScroll() {
+      setScrolled(window.scrollY > 8);
+    }
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isOverlay]);
 
   return (
     <header
       className={cn(
-        "z-40 border-b",
-        isOverlay ? "absolute inset-x-0 top-0 border-white/18 bg-transparent text-white" : "sticky top-0 border-border bg-canvas/95 backdrop-blur"
+        "z-40 border-b transition-[box-shadow,border-color] duration-300 ease-[var(--ease-farm-out)]",
+        isOverlay
+          ? "absolute inset-x-0 top-0 border-white/18 bg-transparent text-white"
+          : cn(
+              "sticky top-0 border-border bg-canvas/95 backdrop-blur",
+              scrolled ? "border-transparent shadow-[0_8px_28px_rgba(23,35,27,0.08)]" : "shadow-[0_0_0_rgba(23,35,27,0)]"
+            )
       )}
     >
       <div className="mx-auto flex min-h-[72px] max-w-[1360px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 py-4 sm:flex-nowrap lg:px-10">

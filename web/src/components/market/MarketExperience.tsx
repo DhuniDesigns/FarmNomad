@@ -1,100 +1,69 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { ListingCard } from "./ListingCard";
+import { MarketListingCard } from "./MarketListingCard";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
-import { Toast } from "@/components/ui/Toast";
-import { filterListings, type MarketFilters } from "@/lib/demo/filter";
-import { useDemoStore } from "@/lib/demo/store";
 import { triggerHaptic } from "@/lib/interactions";
-import type { ListingCategory } from "@/lib/demo/types";
+import type { ListingPage } from "@/types/listing";
 
-const categories: Array<ListingCategory | "all"> = ["all", "Vegetables", "Fruit", "Dairy", "Bakery", "Prepared food", "Herbs"];
+const categories = ["all", "Vegetables", "Fruit", "Dairy", "Bakery", "Prepared food", "Herbs"];
 const regions = ["all", "Lancashire", "Greater Manchester", "Yorkshire"];
-const supplies = ["all", "surplus", "sale", "organic"];
-const sorts = ["newest", "price-asc", "distance", "quantity"];
-const defaultFilters: MarketFilters = {
-  q: "",
-  category: "all",
-  region: "all",
-  supply: "all",
-  sort: "newest"
+// "organic" and "distance" are deliberately absent: the backend has no is_organic
+// column and no geo data yet, so those filters would silently no-op. See
+// docs/DECISIONS.md "Unresolved questions" for the follow-up.
+const supplies = ["all", "surplus", "sale"];
+const sorts = ["newest", "price-asc", "quantity"];
+
+export type MarketFilters = {
+  q: string;
+  category: string;
+  region: string;
+  supply: string;
+  sort: string;
+  page: number;
 };
 
-function queryValue(value: string | null, allowed: string[], fallback: string) {
-  return value && allowed.includes(value) ? value : fallback;
-}
+type MarketExperienceProps = {
+  filters: MarketFilters;
+  listingPage: ListingPage;
+  backendError: boolean;
+};
 
-function filtersFromLocation(): MarketFilters {
-  if (typeof window === "undefined") return defaultFilters;
-  const params = new URLSearchParams(window.location.search);
-
-  return {
-    q: params.get("q") ?? "",
-    category: queryValue(params.get("category"), categories, "all"),
-    region: queryValue(params.get("region"), regions, "all"),
-    supply: queryValue(params.get("supply"), supplies, "all"),
-    sort: queryValue(params.get("sort"), sorts, "newest")
-  };
-}
-
-function visibleCountFromLocation() {
-  if (typeof window === "undefined") return 6;
-  const loaded = Number(new URLSearchParams(window.location.search).get("loaded"));
-  return Number.isFinite(loaded) && loaded > 6 ? Math.min(Math.floor(loaded), 48) : 6;
-}
-
-function marketHref(filters: MarketFilters, visibleCount: number) {
+function buildHref(filters: MarketFilters) {
   const params = new URLSearchParams();
   if (filters.q.trim()) params.set("q", filters.q.trim());
   if (filters.category !== "all") params.set("category", filters.category);
   if (filters.region !== "all") params.set("region", filters.region);
   if (filters.supply !== "all") params.set("supply", filters.supply);
   if (filters.sort !== "newest") params.set("sort", filters.sort);
-  if (visibleCount > 6) params.set("loaded", String(visibleCount));
+  if (filters.page > 0) params.set("page", String(filters.page));
 
   const query = params.toString();
   return query ? `/market?${query}` : "/market";
 }
 
-export function MarketExperience() {
-  const { state, ready, actions } = useDemoStore();
-  const [filters, setFilters] = useState<MarketFilters>(filtersFromLocation);
+export function MarketExperience({ filters, listingPage, backendError }: MarketExperienceProps) {
+  const router = useRouter();
+  const [searchValue, setSearchValue] = useState(filters.q);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(visibleCountFromLocation);
-  const [urlStateReady, setUrlStateReady] = useState(false);
-  const hasHydratedUrlState = useRef(false);
   const closeFiltersRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotion();
 
-  const listings = useMemo(() => filterListings(state.listings, filters), [filters, state.listings]);
-  const surplusKg = state.listings.filter((listing) => listing.surplus && listing.status === "ACTIVE").reduce((sum, listing) => sum + listing.quantity, 0);
-  const visibleListings = listings.slice(0, visibleCount);
   const activeFilters = [
     filters.q ? { key: "q" as const, label: `Search: ${filters.q}` } : null,
     filters.category !== "all" ? { key: "category" as const, label: filters.category } : null,
     filters.region !== "all" ? { key: "region" as const, label: filters.region } : null,
-    filters.supply !== "all" ? { key: "supply" as const, label: filters.supply === "surplus" ? "Surplus only" : filters.supply === "sale" ? "Sale listings" : "Organic" } : null
-  ].filter(Boolean) as Array<{ key: keyof MarketFilters; label: string }>;
-  const returnHref = useMemo(() => marketHref(filters, visibleCount), [filters, visibleCount]);
+    filters.supply !== "all" ? { key: "supply" as const, label: filters.supply === "surplus" ? "Surplus only" : "Sale listings" } : null
+  ].filter(Boolean) as Array<{ key: "q" | "category" | "region" | "supply"; label: string }>;
 
   useEffect(() => {
-    if (hasHydratedUrlState.current) return;
-    hasHydratedUrlState.current = true;
-    setFilters(filtersFromLocation());
-    setVisibleCount(visibleCountFromLocation());
-    setUrlStateReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!urlStateReady) return;
-    if (typeof window === "undefined") return;
-    window.history.replaceState(null, "", returnHref);
-  }, [returnHref, urlStateReady]);
+    setSearchValue(filters.q);
+  }, [filters.q]);
 
   useEffect(() => {
     if (!mobileFiltersOpen) return;
@@ -124,27 +93,33 @@ export function MarketExperience() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  function updateFilter(key: keyof MarketFilters, value: string) {
-    setVisibleCount(6);
-    if (key !== "q") triggerHaptic("selection");
-    setFilters((current) => ({ ...current, [key]: value }));
+  function navigate(next: Partial<MarketFilters>) {
+    router.push(buildHref({ ...filters, page: 0, ...next }));
   }
 
-  function clearFilter(key: keyof MarketFilters) {
-    setVisibleCount(6);
+  function updateFilter(key: "category" | "region" | "supply" | "sort", value: string) {
     triggerHaptic("selection");
-    setFilters((current) => ({ ...current, [key]: key === "q" ? "" : "all" }));
+    navigate({ [key]: value });
+  }
+
+  function clearFilter(key: "q" | "category" | "region" | "supply") {
+    triggerHaptic("selection");
+    navigate({ [key]: key === "q" ? "" : "all" });
   }
 
   function resetFilters() {
-    setVisibleCount(6);
     triggerHaptic("selection");
-    setFilters(defaultFilters);
+    setSearchValue("");
+    router.push("/market");
   }
 
   function closeMobileFilters() {
     triggerHaptic("selection");
     setMobileFiltersOpen(false);
+  }
+
+  function goToPage(nextPage: number) {
+    router.push(buildHref({ ...filters, page: nextPage }));
   }
 
   const filterControls = (
@@ -156,16 +131,18 @@ export function MarketExperience() {
         {regions.map((region) => <option key={region} value={region}>{region === "all" ? "All regions" : region}</option>)}
       </SelectField>
       <SelectField label="Supply type" value={filters.supply} onChange={(event) => updateFilter("supply", event.target.value)}>
-        <option value="all">Sale and surplus</option>
-        <option value="surplus">Surplus only</option>
-        <option value="sale">Sale listings</option>
-        <option value="organic">Organic</option>
+        {supplies.map((supply) => (
+          <option key={supply} value={supply}>
+            {supply === "all" ? "Sale and surplus" : supply === "surplus" ? "Surplus only" : "Sale listings"}
+          </option>
+        ))}
       </SelectField>
       <SelectField label="Sort" value={filters.sort} onChange={(event) => updateFilter("sort", event.target.value)}>
-        <option value="newest">Newest first</option>
-        <option value="price-asc">Lowest price</option>
-        <option value="distance">Nearest first</option>
-        <option value="quantity">Largest lots</option>
+        {sorts.map((sort) => (
+          <option key={sort} value={sort}>
+            {sort === "newest" ? "Newest first" : sort === "price-asc" ? "Lowest price" : "Largest lots"}
+          </option>
+        ))}
       </SelectField>
       <Button type="button" variant="secondary" onClick={resetFilters}>
         Reset filters
@@ -175,7 +152,6 @@ export function MarketExperience() {
 
   return (
     <main className="min-h-screen bg-canvas">
-      <Toast message={state.toast} onClear={actions.clearToast} />
       <section className="border-b border-border bg-canvas">
         <div className="mx-auto grid max-w-[1360px] gap-10 px-5 py-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:px-10 lg:py-16">
           <div>
@@ -186,19 +162,23 @@ export function MarketExperience() {
             <p className="mt-5 max-w-2xl text-lg leading-8 text-ink-700">
               Search local supply, compare collection windows, and send a commitment request without payment processing.
             </p>
-            <form className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-[1fr_auto]" onSubmit={(event) => {
-              event.preventDefault();
-              triggerHaptic("selection");
-              searchRef.current?.blur();
-            }}>
+            <form
+              className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-[1fr_auto]"
+              onSubmit={(event) => {
+                event.preventDefault();
+                triggerHaptic("selection");
+                searchRef.current?.blur();
+                navigate({ q: searchValue });
+              }}
+            >
               <TextField
                 ref={searchRef}
                 aria-label="Search listings"
                 className="w-full"
                 label="Search"
                 placeholder="Search apples, carrots, sourdough…"
-                value={filters.q}
-                onChange={(event) => updateFilter("q", event.target.value)}
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
               />
               <Button className="sm:mt-6" type="submit">
                 <Search aria-hidden="true" size={18} /> Search
@@ -207,21 +187,17 @@ export function MarketExperience() {
           </div>
           <aside className="self-end rounded-2xl border border-border bg-panel-dark p-6 text-on-dark shadow-[0_22px_60px_rgba(23,35,27,0.18)]">
             <p className="text-sm font-semibold text-on-dark-subtle">Live stock board</p>
-            <dl className="mt-5 grid grid-cols-3 gap-3">
+            <dl className="mt-5 grid grid-cols-2 gap-3">
               <div>
-                <dt className="text-xs text-on-dark-subtle">Active lots</dt>
-                <dd className="text-2xl font-semibold">{state.listings.filter((listing) => listing.status === "ACTIVE").length}</dd>
+                <dt className="text-xs text-on-dark-subtle">Matching lots</dt>
+                <dd className="text-2xl font-semibold">{listingPage.totalElements}</dd>
               </div>
               <div>
-                <dt className="text-xs text-on-dark-subtle">Surplus qty</dt>
-                <dd className="text-2xl font-semibold">{surplusKg}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-on-dark-subtle">Regions</dt>
-                <dd className="text-2xl font-semibold">3</dd>
+                <dt className="text-xs text-on-dark-subtle">Page</dt>
+                <dd className="text-2xl font-semibold">{listingPage.number + 1} / {Math.max(listingPage.totalPages, 1)}</dd>
               </div>
             </dl>
-            <p className="mt-5 text-sm leading-6 text-on-dark-muted">Use Dashboard to create stock and see it appear on the public market immediately.</p>
+            <p className="mt-5 text-sm leading-6 text-on-dark-muted">Listings come straight from the FarmNomad marketplace API and refresh every five minutes.</p>
           </aside>
         </div>
       </section>
@@ -235,8 +211,14 @@ export function MarketExperience() {
         </aside>
 
         <div>
+          {backendError ? (
+            <div className="mb-5 rounded-xl border border-[#e0b889] bg-[#f3e5d7] px-4 py-3 text-sm font-medium text-warning-600" role="status">
+              Showing a limited offline sample — the marketplace API is unreachable right now. Reload to try again.
+            </div>
+          ) : null}
+
           <div className="mb-4 flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-ink-700">{ready ? `${listings.length} listings match your board` : "Loading listings…"}</p>
+            <p className="text-sm font-medium text-ink-700">{listingPage.totalElements} listings match your board</p>
             <Button className="lg:hidden" type="button" variant="secondary" onClick={() => {
               triggerHaptic("selection");
               setMobileFiltersOpen(true);
@@ -251,7 +233,7 @@ export function MarketExperience() {
               {activeFilters.map((filter) => (
                 <motion.button
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-brand-border bg-white px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-700 hover:bg-primary-700 hover:text-white active:border-primary-800 active:bg-primary-800 active:text-white focus-visible:ring-3 focus-visible:ring-primary-600/30"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-brand-border bg-white px-3 text-sm font-semibold text-ink-700 transition-colors duration-150 ease-[var(--ease-farm-out)] hover:border-primary-700 hover:bg-primary-700 hover:text-white active:border-primary-800 active:bg-primary-800 active:text-white focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30"
                   exit={{ opacity: 0, scale: 0.96, y: -4 }}
                   initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: -4 }}
                   key={filter.key}
@@ -268,46 +250,35 @@ export function MarketExperience() {
             </div>
           ) : null}
 
-          {!ready ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading listings">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div className="overflow-hidden rounded-xl border border-border bg-white" key={index}>
-                  <div className="aspect-[4/3] animate-pulse bg-soft" />
-                  <div className="grid gap-3 p-5">
-                    <div className="h-4 w-20 animate-pulse rounded bg-soft" />
-                    <div className="h-6 w-3/4 animate-pulse rounded bg-soft" />
-                    <div className="h-4 w-1/2 animate-pulse rounded bg-soft" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : listings.length > 0 ? (
+          {listingPage.content.length > 0 ? (
             <>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 <AnimatePresence mode="popLayout">
-                {visibleListings.map((listing, index) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    priority={index === 0}
-                    returnHref={returnHref}
-                    state={state}
-                    favourite={state.favourites.includes(listing.id)}
-                    onToggleFavourite={(listingId) => {
-                      triggerHaptic(state.favourites.includes(listingId) ? "selection" : "success");
-                      actions.toggleFavourite(listingId);
-                    }}
-                  />
+                {listingPage.content.map((listing) => (
+                  <MarketListingCard key={listing.id} listing={listing} returnHref={buildHref(filters)} />
                 ))}
                 </AnimatePresence>
               </div>
-              {visibleCount < listings.length ? (
-                <div className="mt-8 flex justify-center">
-                  <Button type="button" variant="secondary" onClick={() => {
-                    triggerHaptic("selection");
-                    setVisibleCount((count) => count + 6);
-                  }}>
-                    Load more listings
+              {listingPage.totalPages > 1 ? (
+                <div className="mt-8 flex items-center justify-center gap-3">
+                  <Button
+                    disabled={listingPage.number <= 0}
+                    type="button"
+                    variant="secondary"
+                    onClick={() => goToPage(listingPage.number - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm font-medium text-ink-700">
+                    Page {listingPage.number + 1} of {listingPage.totalPages}
+                  </span>
+                  <Button
+                    disabled={listingPage.number + 1 >= listingPage.totalPages}
+                    type="button"
+                    variant="secondary"
+                    onClick={() => goToPage(listingPage.number + 1)}
+                  >
+                    Next
                   </Button>
                 </div>
               ) : null}

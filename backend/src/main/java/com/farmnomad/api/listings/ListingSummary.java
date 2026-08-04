@@ -1,15 +1,20 @@
 package com.farmnomad.api.listings;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 public record ListingSummary(
     UUID id,
     String title,
+    String description,
     String category,
     int pricePence,
     BigDecimal quantity,
     String unit,
     String location,
     ListingStatus status,
-    boolean surplus) {}
+    boolean surplus,
+    Double pickupLat,
+    Double pickupLng,
+    Instant createdAt) {}

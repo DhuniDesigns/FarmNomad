@@ -16,8 +16,31 @@ spring:
     enabled: true
 
 farmnomad:
-  web-origin: ${WEB_ORIGIN:http://localhost:3000}
+  # Was localhost:3000 — didn't match the documented local dev command
+  # (README.md / CLAUDE.md run the web app on 127.0.0.1:5174), which silently
+  # broke CORS + cookie delivery. See docs/DECISIONS.md.
+  web-origin: ${WEB_ORIGIN:http://127.0.0.1:5174}
   ai-service-base-url: ${AI_SERVICE_BASE_URL:http://localhost:8010}
+  jwt:
+    # Dev-only fallback — never rely on this default outside local dev; set
+    # JWT_SECRET in any shared/deployed environment. Must be >= 32 bytes for
+    # HS256 (jjwt enforces this at startup).
+    secret: ${JWT_SECRET:local-dev-only-jwt-signing-secret-do-not-use-in-production-rotate-me}
+    access-token-ttl-minutes: ${JWT_ACCESS_TTL_MINUTES:15}
+    refresh-token-ttl-days: ${JWT_REFRESH_TTL_DAYS:30}
+  geocoding:
+    postcodes-io-url: ${POSTCODES_IO_URL:https://api.postcodes.io}
+    # Optional — Mapbox fallback is skipped (not an error) when this is blank,
+    # which it is by default in local dev. An exported empty MAPBOX_TOKEN
+    # shell variable overrides this property file even when set, so if
+    # Mapbox fallback isn't firing when expected, check `env | grep MAPBOX`.
+    mapbox-token: ${MAPBOX_TOKEN:}
+    timeout-ms: ${GEOCODING_TIMEOUT_MS:3000}
+    cache-ttl-days: ${GEOCODING_CACHE_TTL_DAYS:90}
+  location:
+    min-update-interval-seconds: ${LOCATION_MIN_UPDATE_INTERVAL_SECONDS:5}
+    default-radius-km: ${LOCATION_DEFAULT_RADIUS_KM:25}
+    max-radius-km: ${LOCATION_MAX_RADIUS_KM:100}
 
 management:
   endpoints:

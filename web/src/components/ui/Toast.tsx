@@ -42,7 +42,7 @@ export function Toast({ message, onClear }: { message?: string; onClear: () => v
           <div className="flex items-center gap-3 px-4 py-3">
             <CheckCircle2 aria-hidden="true" className="shrink-0 text-primary-600" size={18} />
             <span className="min-w-0 flex-1 break-words">{message}</span>
-            <button className="grid size-8 shrink-0 place-items-center rounded-md text-ink-500 transition-colors hover:bg-soft hover:text-ink-900 focus-visible:ring-3 focus-visible:ring-primary-600/30" type="button" onClick={dismiss} aria-label="Dismiss notification">
+            <button className="grid size-8 shrink-0 place-items-center rounded-md text-ink-500 transition-colors hover:bg-soft hover:text-ink-900 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-600/30" type="button" onClick={dismiss} aria-label="Dismiss notification">
               <X aria-hidden="true" size={16} />
             </button>
           </div>

@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterValues } from "@/lib/auth/schemas";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { TextField } from "@/components/ui/Field";
-import { useDemoStore } from "@/lib/demo/store";
+import { useAppDispatch } from "@/lib/hooks";
+import { sessionEstablished } from "@/lib/auth/authSlice";
+import { useRegisterMutation } from "@/lib/api/authApi";
+import { extractApiErrorMessage } from "@/lib/api/errorMessage";
 import { routeAfterLogin } from "@/lib/auth/routes";
 import { triggerHaptic } from "@/lib/interactions";
 
@@ -19,26 +22,28 @@ const roleOptions = [
 
 export function RegisterForm() {
   const router = useRouter();
-  const { actions } = useDemoStore();
-  const { register, handleSubmit, formState, watch } = useForm<RegisterValues>({
+  const dispatch = useAppDispatch();
+  const [registerAccount, { isLoading }] = useRegisterMutation();
+  const [formError, setFormError] = useState("");
+  const { register, handleSubmit, formState } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { role: "FARMER" }
   });
-  const selectedRole = watch("role");
 
-  function onSubmit(values: RegisterValues) {
-    triggerHaptic("success");
-    actions.registerUser({ name: values.displayName, email: values.email, role: values.role });
-    router.push(routeAfterLogin(values.role));
-  }
-
-  function continueWithGoogle() {
-    actions.registerUser({
-      name: "FarmNomad member",
-      email: `member-${Date.now()}@farmnomad.co.uk`,
-      role: selectedRole
-    });
-    router.push(routeAfterLogin(selectedRole));
+  async function onSubmit(values: RegisterValues) {
+    setFormError("");
+    try {
+      const response = await registerAccount(values).unwrap();
+      if (!response.accessToken || !response.user) {
+        setFormError(response.message || "Couldn't create that account.");
+        return;
+      }
+      triggerHaptic("success");
+      dispatch(sessionEstablished({ accessToken: response.accessToken, user: response.user }));
+      router.push(routeAfterLogin(response.user.role));
+    } catch (error) {
+      setFormError(extractApiErrorMessage(error, "Couldn't create that account."));
+    }
   }
 
   return (
@@ -62,13 +67,22 @@ export function RegisterForm() {
           ))}
         </div>
       </fieldset>
-      <Button type="submit">Create account</Button>
+      {formError ? (
+        <p className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-danger-600" role="alert">
+          {formError}
+        </p>
+      ) : null}
+      <Button disabled={isLoading} type="submit">
+        {isLoading ? "Creating account…" : "Create account"}
+      </Button>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs font-semibold text-ink-500">
         <span className="h-px bg-border" />
         <span>or continue with</span>
         <span className="h-px bg-border" />
       </div>
-      <GoogleAuthButton label="Sign up with Google" onClick={continueWithGoogle} />
+      <p className="rounded-full border border-dashed border-border bg-soft px-4 py-3 text-center text-sm font-semibold text-ink-500">
+        Google sign-up isn&apos;t connected yet
+      </p>
     </form>
   );
 }

@@ -18,6 +18,10 @@ Conventions: PostgreSQL, `snake_case`, plural table names, `uuid` PKs **[Recomme
 | display_name | text | NOT NULL |
 | phone | text | nullable |
 | status | text | CHECK in ('ACTIVE','SUSPENDED','PENDING') — default 'ACTIVE' |
+| address / city / postcode / country | text | nullable — added `V6__add_geolocation.sql` (2026-08-04). This entity had no address fields at all before that migration. |
+| address_lat / address_lng | double precision | nullable — geocoded from the address fields above, or a manually-placed pin |
+| geocode_source | varchar(20) | nullable — `POSTCODES_IO`\|`MAPBOX`\|`MANUAL`\|`NONE`, see `GeocodeSource` |
+| geocoded_at | timestamptz | nullable |
 | created_at / updated_at | timestamptz | |
 
 ### organisations
@@ -45,8 +49,11 @@ Marketplace produce/goods. **[Confirmed domain]**
 | quantity | numeric(12,2) | NOT NULL, CHECK ≥ 0 |
 | unit | text | e.g. kg, box, item |
 | status | text | CHECK in ('ACTIVE','ARCHIVED','SOLD_OUT'), default 'ACTIVE' |
-| location | text | display location; geo-coords future |
+| location | text | display location; free text, geocoded on write (see below) |
 | is_surplus | boolean | default false — flagged for donation |
+| pickup_lat / pickup_lng | double precision | nullable — geocoded from `location` on create/update, or a manually-placed pin. Added `V6__add_geolocation.sql` (2026-08-04). Indexed (`idx_listings_pickup_coords`) as a bounding-box prefilter for `GET /api/surplus/nearby`. |
+| geocode_source | varchar(20) | nullable — `POSTCODES_IO`\|`MAPBOX`\|`MANUAL`\|`NONE` |
+| geocoded_at | timestamptz | nullable |
 
 ### listing_images
 | Column | Type | Notes |
@@ -107,6 +114,19 @@ id uuid PK · user_id FK → users NOT NULL · cloudinary_public_id text · pred
 ### subscriptions **[Confirmed entity; purpose under-documented — see DECISIONS]**
 id uuid PK · user_id FK → users NOT NULL · plan text · status text · started_at / ends_at timestamptz.
 
+### driver_locations **[Confirmed, implemented `V6__add_geolocation.sql`, 2026-08-04]**
+Live driver position — one row per driver, upserted, not a history table. Written by `PUT /api/drivers/me/location` and the STOMP `/app/driver/location` destination. `driver_id` is a plain UUID FK, matching how `listings.vendor_id` references `users` elsewhere (not a JPA `@OneToOne` relation).
+| Column | Type | Notes |
+|---|---|---|
+| id | bigserial PK | |
+| driver_id | uuid FK → users | UNIQUE, NOT NULL, ON DELETE CASCADE |
+| lat / lng | double precision | NOT NULL |
+| heading | double precision | nullable — degrees from north, 0-360 |
+| accuracy | double precision | nullable — metres, from the browser Geolocation API |
+| updated_at | timestamptz | NOT NULL |
+
+No history is retained (deliberately — see DECISIONS "Technical — geolocation & maps", UK GDPR retention rationale). A `driver_location_history` table, written to asynchronously, is the identified path if a breadcrumb trail is ever needed.
+
 ## 2. Relationships
 
 - users 1—0..1 organisations (organisation profile only for ORGANISATION role)
@@ -115,6 +135,7 @@ id uuid PK · user_id FK → users NOT NULL · plan text · status text · start
 - users (donor) 1—* donations *—1 organisations; donations *—1 listings
 - users 1—* meals / equipment / notifications / crop_scan_results / subscriptions
 - users 1—* messages (as sender and as recipient)
+- users (driver) 1—0..1 driver_locations
 
 ## 3. Constraints
 
@@ -126,7 +147,7 @@ id uuid PK · user_id FK → users NOT NULL · plan text · status text · start
 
 ## 4. Indexes **[Recommended]**
 
-- listings: `(status, category)`, `(vendor_id)`, `(is_surplus) WHERE is_surplus`, text search on title/description (`GIN` on `to_tsvector`) for market search
+- listings: `(status, category)`, `(vendor_id)`, `(is_surplus) WHERE is_surplus`, `(pickup_lat, pickup_lng)` **[Confirmed, implemented — bounding-box prefilter for GET /api/surplus/nearby]**, text search on title/description (`GIN` on `to_tsvector`) for market search
 - orders: `(vendor_id, status)`, `(buyer_id)`
 - donations: `(organisation_id, status)`, `(donor_id)`, `(status) WHERE status='AVAILABLE'`
 - messages: `(recipient_id, read_at)`, `(sender_id)`
