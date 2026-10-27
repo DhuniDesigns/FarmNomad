@@ -122,3 +122,7 @@ uvicorn app.main:app --reload --port 8010
 | `docs/IMPLEMENTATION-PLAN.md` | Phased MVP plan with tasks and dependencies |
 | `docs/DECISIONS.md` | Decision log, assumptions, open questions, risks |
 | `AGENTS.md` | Rules for coding agents working on this project |
+
+## Credits
+
+Designed and built by **Hafsoh Bashar** ([@DhuniDesigns](https://github.com/DhuniDesigns)).
